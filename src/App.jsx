@@ -1,5 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import "./App.css";
+import { Alert, useAlert } from "./components/Alert";
+import "./components/Alert.css";
 
 function App() {
   const [codigo, setCodigo] = useState("");
@@ -9,7 +11,9 @@ function App() {
   const [produtosSalvos, setProdutosSalvos] = useState([]);
   const [nomeTemp, setNomeTemp] = useState("");
   const [marcaTemp, setMarcaTemp] = useState("");
+  const [ultimoCodigo, setUltimoCodigo] = useState("");
   const inputRef = useRef(null);
+  const { alertMessage, showAlert } = useAlert();
 
   useEffect(() => {
     inputRef.current.focus();
@@ -25,8 +29,7 @@ function App() {
     localStorage.setItem("produtos_modificados", JSON.stringify(lista));
     setProdutosSalvos(lista);
   };
-
-  // 🔹 Traduz texto automaticamente com LibreTranslate
+  //api de tradução
   const traduzirTexto = async (texto) => {
     if (!texto) return texto;
     try {
@@ -43,16 +46,19 @@ function App() {
       const data = await res.json();
       return data?.translatedText || texto;
     } catch {
-      return texto; 
+      return texto;
     }
   };
 
-  // 🔹 Função principal de busca (com múltiplas APIs + tradução)
+  //buca por codigo de barras
   const buscarProduto = async () => {
-    if (!codigo) return alert("Digite ou escaneie um código de barras!");
+    if (!codigo) return showAlert("Digite ou escaneie um código de barras!");
 
     setLoading(true);
     setProduto(null);
+    setUltimoCodigo(codigo);
+    setCodigo("");
+
 
     try {
       let nome = "";
@@ -60,7 +66,7 @@ function App() {
       let descricao = "";
       let imagem = "";
 
-      // === 1️⃣ OpenFoodFacts ===
+      // api 1
       try {
         const res = await fetch(`https://world.openfoodfacts.org/api/v0/product/${codigo}.json`);
         const data = await res.json();
@@ -75,7 +81,7 @@ function App() {
         console.warn("OpenFoodFacts falhou:", err);
       }
 
-      // === 2️⃣ BrasilAPI ===
+      // api 2
       if (!nome || !marca) {
         try {
           const res2 = await fetch(`https://brasilapi.com.br/api/barcode/v1/${codigo}`);
@@ -89,7 +95,7 @@ function App() {
         }
       }
 
-      // === 3️⃣ UPCItemDB ===
+      //api 3
       if (!nome || !marca) {
         try {
           const res3 = await fetch(`https://api.upcitemdb.com/prod/trial/lookup?upc=${codigo}`);
@@ -106,7 +112,7 @@ function App() {
         }
       }
 
-      // === 4️⃣ ProductOpenData ===
+      // api 4
       if (!nome || !marca) {
         try {
           const res4 = await fetch(`https://api.productopendata.com/products/${codigo}`);
@@ -121,16 +127,16 @@ function App() {
         }
       }
 
-      // 🔹 Tradução automática (nome e marca)
+      // traduz caso esteja em ingles
       nome = await traduzirTexto(nome);
       marca = await traduzirTexto(marca);
 
-      // 🔹 Se nenhuma API achou
+      // valores padrão
       nome = nome || `Produto ${codigo.slice(-4)}`;
       marca = marca || "Marca Genérica";
       descricao = descricao || "Sem descrição disponível";
 
-      // Verifica se já existe salvo localmente
+      // salvar loicalmente os produtos para criar a api personalizada
       const lista = JSON.parse(localStorage.getItem("produtos_modificados") || "[]");
       const produtoExistente = lista.find((item) => item.codigo === codigo);
 
@@ -146,7 +152,7 @@ function App() {
       setNomeTemp("");
       setMarcaTemp("");
     } catch (err) {
-      alert("Erro ao buscar produto.");
+      showAlert("Erro ao buscar produto.");
       console.error(err);
     } finally {
       setLoading(false);
@@ -156,9 +162,16 @@ function App() {
 
   const handleKeyPress = (e) => {
     if (e.key === "Enter") buscarProduto();
+
+    if (e.key === "ArrowUp" && !codigo && ultimoCodigo) {
+      setCodigo(ultimoCodigo);
+      setTimeout(() => {
+        buscarProduto();
+      }, 100);
+    }
   };
 
-  // 🔹 Upload manual de imagem
+  // upar as imagens
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -171,7 +184,7 @@ function App() {
     reader.readAsDataURL(file);
   };
 
-  // 🔹 Confirmar nome e marca manualmente
+  // confirmar o nome e a marca modificados
   const confirmarNomeMarca = (tipo) => {
     if (!produto) return;
     if (tipo === "nome" && nomeTemp.trim()) {
@@ -184,11 +197,11 @@ function App() {
     }
   };
 
-  // 🔹 Salvar produto com preço formatado
+  // salvar produto com preço personalizado
   const salvarProdutoAtualizado = () => {
-    if (!produto) return alert("Nenhum produto carregado.");
+    if (!produto) return showAlert("Nenhum produto carregado.");
     if (!precoCustom && produto.preco === "Sem preço definido")
-      return alert("Digite um preço antes de salvar!");
+      return showAlert("Digite um preço antes de salvar!");
 
     const precoFormatado = precoCustom
       ? `${precoCustom}R$`
@@ -208,12 +221,12 @@ function App() {
     salvarProdutosLocal(novosProdutos);
     setProduto(atualizado);
     setPrecoCustom("");
-    alert("Produto salvo com sucesso!");
+    showAlert("Produto salvo com sucesso!");
   };
 
-  // 🔹 Formata preço (aceita apenas números)
+  // formatação dos preços
   const handlePrecoChange = (e) => {
-    let valor = e.target.value.replace(/\D/g, ""); 
+    let valor = e.target.value.replace(/\D/g, "");
     if (valor.length > 2) valor = valor.slice(0, -2) + "," + valor.slice(-2);
     setPrecoCustom(valor);
   };
@@ -235,23 +248,29 @@ function App() {
   };
 
   return (
-    <div className="container">
-      <h1>ConsulteJá</h1>
-      <p>Escaneie o código de barras ou digite manualmente:</p>
+    <div className={`container ${produto ? "with-product" : "centered"}`}>
+      <Alert message={alertMessage} />
+      <div className="search-section">
+        <h1>ConsulteJá</h1>
+        <p>Use a seta para cima do seu teclado para voltar ao produto anterior </p>
+        <p>Escaneie o código de barras ou digite manualmente: </p>
 
-      <div className="input-area">
-        <input
-          ref={inputRef}
-          type="text"
-          placeholder="Escaneie ou digite o código"
-          value={codigo}
-          onChange={(e) => setCodigo(e.target.value)}
-          onKeyDown={handleKeyPress}
-        />
-        <button onClick={buscarProduto}>Consultar</button>
+        <div className="input-area">
+          <input
+            ref={inputRef}
+            type="text"
+            placeholder="Escaneie ou digite o código"
+            value={codigo}
+            onChange={(e) => setCodigo(e.target.value)}
+            onKeyDown={handleKeyPress}
+          />
+          <button onClick={buscarProduto}>Consultar</button>
+        </div>
       </div>
 
-      {loading && <p className="loading">Carregando...</p>}
+      {loading && <p className="loading ">Carregando...</p>}
+      {loading && <p className="loading-spinner "></p>}
+    
 
       {produto && (
         <div className="card">
@@ -329,7 +348,7 @@ function App() {
               value={precoCustom}
               onChange={handlePrecoChange}
             />
-            <button onClick={salvarProdutoAtualizado}>Salvar Produto</button>
+            <button className="salvar" onClick={salvarProdutoAtualizado}>Salvar Produto</button>
           </div>
         </div>
       )}

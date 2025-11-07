@@ -31,12 +31,30 @@ body {
 }
 
 .container {
-  max-width: 700px;
-  margin: 0 auto;
-  padding: 20px;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: all 0.8s ease;
+  padding: 0.5rem;
 }
 
-/* Header - Estilo Google */
+.centered .search-section {
+  margin-top: auto;
+  margin-bottom: auto;
+  transform: translateY(0);
+  transition: all 0.8s ease;
+  text-align: center;
+}
+
+.with-product .search-section {
+  margin-top: 20px;
+  margin-bottom: 40px;
+  transform: translateY(-1px);
+  transition: all 0.8s ease;
+}
+
+/* letras */
 h1 {
   font-size: 24px;
   font-weight: 400;
@@ -51,7 +69,7 @@ h3 {
   font-size: 18px;
   font-weight: 500;
   color: var(--text-primary);
-  margin-bottom: 16px;
+  margin-top: 50px;
   padding-bottom: 8px;
   border-bottom: 1px solid var(--border-light);
 }
@@ -63,14 +81,14 @@ p {
   font-size: 14px;
 }
 
-/* Área de Input - Estilo Google Search */
+/* inputs */
 .input-area {
   display: flex;
   gap: 8px;
-  margin-bottom: 32px;
-  max-width: 784px;
+  max-width: 684px;
   margin-left: auto;
   margin-right: auto;
+  width: 600px;
 }
 
 .input-area input {
@@ -95,8 +113,8 @@ p {
   color: var(--text-muted);
 }
 
-/* === BOTÕES ESTILO GOOGLE MATERIAL === */
-/* Botões com animações e proporções corrigidas */
+
+/* Botões */
 button,
 .input-area button,
 .edit-area button,
@@ -109,7 +127,7 @@ button,
   border: none;
   outline: none;
   border-radius: 8px;
-  font-size: 14px; /* Tamanho proporcional e legível */
+  font-size: 14px; 
   font-weight: 500;
   cursor: pointer;
   transition: var(--transition);
@@ -117,16 +135,15 @@ button,
   color: var(--text-primary);
   border: 1px solid var(--border);
   box-shadow: var(--shadow-light);
-  padding: 10px 20px; /* Espaçamento interno equilibrado */
-  display: inline-flex; /* Permite centralização */
+  padding: 10px 20px; 
+  display: inline-flex; 
   align-items: center;
-  justify-content: center; /* Centraliza o texto */
+  justify-content: center;
   text-align: center;
-  line-height: 1.2; /* Altura de linha mais natural */
-  min-height: 40px; /* Garante altura mínima uniforme */
+  line-height: 1.2; 
+  min-height: 40px;
 }
 
-/* Efeito ripple */
 button::after,
 .input-area button::after,
 .edit-area button::after,
@@ -147,7 +164,6 @@ button::after,
   transition: width 0.4s ease, height 0.4s ease, opacity 0.6s ease;
 }
 
-/* Hover e interação */
 button:hover,
 .input-area button:hover,
 .edit-area button:hover,
@@ -159,7 +175,6 @@ button:hover,
   transform: translateY(-1px);
 }
 
-/* Animação ripple */
 button:active::after,
 .input-area button:active::after,
 .edit-area button:active::after,
@@ -172,7 +187,6 @@ button:active::after,
   opacity: 1;
 }
 
-/* Clique */
 button:active,
 .input-area button:active,
 .edit-area button:active,
@@ -184,17 +198,55 @@ button:active,
   background: #e8eaed;
 }
 
-/* Loading */
+/* carregamento */
 .loading {
-  text-align: center;
-  padding: 20px;
-  color: var(--text-secondary);
-  font-weight: 400;
-  margin-bottom: 20px;
-  font-size: 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 40px 20px;
+  font-size: 15px;
+  font-weight: 500;
+  color: #555;
+  letter-spacing: 0.4px;
+  animation: fadeIn 0.3s ease;
+  position: relative;
+  bottom: 10px;
 }
 
-/* Card do Produto */
+/* Spinner animado estilo Google */
+.loading-spinner {
+  width: 22px;
+  height: 22px;
+  border: 3px solid rgba(0, 0, 0, 0.1);
+  border-top-color: #4285f4; /* Azul Google */
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  position: relative;
+  bottom: 105px;
+  right: 70px;
+}
+
+/* --- animações --- */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* produto */
 .card {
   background: var(--surface);
   border-radius: var(--radius);
@@ -206,7 +258,7 @@ button:active,
   animation: fadeIn 0.3s ease-in;
 }
 
-/* Campos Editáveis */
+/* Campos editaveis */
 .campo-editavel {
   margin-bottom: 20px;
   padding: 0;
@@ -250,7 +302,7 @@ button:active,
   border-color: var(--text-primary);
 }
 
-/* Descrição e Preço */
+/* Descrição e preco */
 .descricao {
   background: transparent;
   padding: 0;
@@ -270,7 +322,7 @@ button:active,
   margin-bottom: 20px;
 }
 
-/* Área de Imagem */
+/* imagem */
 .imagem-produto,
 .upload-imagem {
   margin-bottom: 24px;
@@ -307,19 +359,22 @@ button:active,
   font-size: 14px;
 }
 
-/* Preço Customizado */
+/* Preço customizado */
 .preco-custom {
   background: transparent;
   margin-top: 24px;
+  position: relative;
+  left: 110px;
 }
 
 .preco-custom input {
   width: 100%;
-  padding: 12px 16px;
+  padding: 15px 16px;
   border: 1px solid var(--border);
   border-radius: 6px;
   font-size: 14px;
   margin-bottom: 12px;
+  margin-right: 10px;
   background: var(--surface);
   transition: var(--transition);
   max-width: 300px;
@@ -330,9 +385,15 @@ button:active,
   border-color: var(--text-primary);
 }
 
-/* Lista */
+.salvar {
+  width: 300px;
+}
+
+/* Lista de produtos adicionados */
 .lista {
-  margin-top: 32px;
+  margin-bottom: 105px;
+  position: relative;
+  bottom: 50px;
   animation: fadeIn 0.3s ease-in;
 }
 
@@ -357,14 +418,12 @@ button:active,
   padding-right: 8px;
 }
 
-/* Estados de Foco */
 button:focus-visible,
 input:focus-visible {
   outline: 2px solid var(--text-primary);
   outline-offset: 2px;
 }
 
-/* Animações */
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -376,7 +435,6 @@ input:focus-visible {
   }
 }
 
-/* Scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
 }
@@ -391,7 +449,6 @@ input:focus-visible {
   background: var(--text-muted);
 }
 
-/* Responsividade */
 @media (max-width: 768px) {
   .container {
     padding: 16px;
@@ -419,4 +476,12 @@ input:focus-visible {
   .produto-img {
     max-width: 150px;
   }
+
+  .preco-custom {
+  background: transparent;
+  margin-top: 24px;
+  position: relative;
+  left: 40px;
+}
+
 }
