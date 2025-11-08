@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
-import "./App.css";
 import { Alert, useAlert } from "./components/Alert";
-import "./components/Alert.css";
+import Dashboard from "./components/Dashboard";
+import { initialProducts } from "./data/initialProducts";
 
 function App() {
   const [codigo, setCodigo] = useState("");
@@ -11,25 +11,98 @@ function App() {
   const [produtosSalvos, setProdutosSalvos] = useState([]);
   const [nomeTemp, setNomeTemp] = useState("");
   const [marcaTemp, setMarcaTemp] = useState("");
+  const [descricaoTemp, setDescricaoTemp] = useState("");
   const [ultimoCodigo, setUltimoCodigo] = useState("");
+  const [historicoPesquisas, setHistoricoPesquisas] = useState([]);
+  const [apiLink, setApiLink] = useState("");
+  const [editandoNome, setEditandoNome] = useState(false);
+  const [editandoMarca, setEditandoMarca] = useState(false);
+  const [editandoDescricao, setEditandoDescricao] = useState(false);
   const inputRef = useRef(null);
   const { alertMessage, showAlert } = useAlert();
 
   useEffect(() => {
     inputRef.current.focus();
-    carregarProdutosSalvos();
+    carregarProdutosIniciais();
+    carregarHistoricoPesquisas();
   }, []);
 
-  const carregarProdutosSalvos = () => {
-    const dados = JSON.parse(localStorage.getItem("produtos_modificados") || "[]");
-    setProdutosSalvos(dados);
+  const carregarProdutosIniciais = () => {
+    try {
+      const produtosExistentes = JSON.parse(localStorage.getItem("produtos_modificados") || "[]");
+      if (produtosExistentes.length === 0) {
+        console.log("Carregando produtos iniciais...");
+        const produtosComTimestamp = initialProducts.map(prod => ({
+          ...prod,
+          isInitial: true,
+          createdAt: new Date().toISOString()
+        }));
+        localStorage.setItem("produtos_modificados", JSON.stringify(produtosComTimestamp));
+        setProdutosSalvos(produtosComTimestamp);
+      } else {
+        console.log("Produtos existentes carregados:", produtosExistentes.length);
+        setProdutosSalvos(produtosExistentes);
+      }
+    } catch (error) {
+      console.error("Erro ao carregar produtos:", error);
+      const produtosComTimestamp = initialProducts.map(prod => ({
+        ...prod,
+        isInitial: true,
+        createdAt: new Date().toISOString()
+      }));
+      localStorage.setItem("produtos_modificados", JSON.stringify(produtosComTimestamp));
+      setProdutosSalvos(produtosComTimestamp);
+    }
+  };
+
+  const carregarHistoricoPesquisas = () => {
+    const historico = JSON.parse(localStorage.getItem("historico_pesquisas") || "[]");
+    setHistoricoPesquisas(historico);
   };
 
   const salvarProdutosLocal = (lista) => {
+    console.log("Salvando produtos:", lista.length);
     localStorage.setItem("produtos_modificados", JSON.stringify(lista));
     setProdutosSalvos(lista);
   };
-  //api de tradução
+
+
+  const excluirProduto = (codigo) => {
+    const novosProdutos = produtosSalvos.filter(p => p.codigo !== codigo);
+    salvarProdutosLocal(novosProdutos);
+    showAlert("Produto excluído com sucesso!");
+    if (produto && produto.codigo === codigo) {
+      setProduto(null);
+    }
+  };
+
+  const resetarParaProdutosIniciais = () => {
+    if (window.confirm("Isso irá restaurar os 10 produtos iniciais e remover quaisquer produtos adicionados. Continuar?")) {
+      const produtosComTimestamp = initialProducts.map(prod => ({
+        ...prod,
+        isInitial: true,
+        createdAt: new Date().toISOString()
+      }));
+      salvarProdutosLocal(produtosComTimestamp);
+      showAlert("Produtos iniciais restaurados com sucesso!");
+    }
+  };
+
+  const adicionarHistoricoPesquisa = (codigo, produtoEncontrado) => {
+    const novoHistorico = [
+      {
+        timestamp: new Date().toISOString(),
+        codigo,
+        produto: produtoEncontrado?.nome || `Produto ${codigo}`,
+        sucesso: !!produtoEncontrado
+      },
+      ...historicoPesquisas.slice(0, 49)
+    ];
+    setHistoricoPesquisas(novoHistorico);
+    localStorage.setItem("historico_pesquisas", JSON.stringify(novoHistorico));
+  };
+
+  // API de tradução
   const traduzirTexto = async (texto) => {
     if (!texto) return texto;
     try {
@@ -50,15 +123,12 @@ function App() {
     }
   };
 
-  //buca por codigo de barras
   const buscarProduto = async () => {
     if (!codigo) return showAlert("Digite ou escaneie um código de barras!");
 
     setLoading(true);
     setProduto(null);
     setUltimoCodigo(codigo);
-    setCodigo("");
-
 
     try {
       let nome = "";
@@ -66,7 +136,7 @@ function App() {
       let descricao = "";
       let imagem = "";
 
-      // api 1
+      // API 1 - OpenFoodFacts
       try {
         const res = await fetch(`https://world.openfoodfacts.org/api/v0/product/${codigo}.json`);
         const data = await res.json();
@@ -81,7 +151,7 @@ function App() {
         console.warn("OpenFoodFacts falhou:", err);
       }
 
-      // api 2
+      // API 2 - BrasilAPI
       if (!nome || !marca) {
         try {
           const res2 = await fetch(`https://brasilapi.com.br/api/barcode/v1/${codigo}`);
@@ -95,7 +165,7 @@ function App() {
         }
       }
 
-      //api 3
+      // API 3 - UPCItemDB
       if (!nome || !marca) {
         try {
           const res3 = await fetch(`https://api.upcitemdb.com/prod/trial/lookup?upc=${codigo}`);
@@ -112,7 +182,7 @@ function App() {
         }
       }
 
-      // api 4
+      // API 4 - ProductOpenData
       if (!nome || !marca) {
         try {
           const res4 = await fetch(`https://api.productopendata.com/products/${codigo}`);
@@ -127,33 +197,39 @@ function App() {
         }
       }
 
-      // traduz caso esteja em ingles
       nome = await traduzirTexto(nome);
       marca = await traduzirTexto(marca);
 
-      // valores padrão
       nome = nome || `Produto ${codigo.slice(-4)}`;
       marca = marca || "Marca Genérica";
       descricao = descricao || "Sem descrição disponível";
 
-      // salvar loicalmente os produtos para criar a api personalizada
       const lista = JSON.parse(localStorage.getItem("produtos_modificados") || "[]");
       const produtoExistente = lista.find((item) => item.codigo === codigo);
 
-      setProduto({
+      const produtoEncontrado = {
         codigo,
         nome,
         marca,
         descricao,
         preco: produtoExistente?.preco || "Sem preço definido",
         imagem: produtoExistente?.imagem || imagem,
-      });
+      };
 
+      setProduto(produtoEncontrado);
       setNomeTemp("");
       setMarcaTemp("");
+      setDescricaoTemp("");
+      setEditandoNome(false);
+      setEditandoMarca(false);
+      setEditandoDescricao(false);
+      
+      // Adicionar ao histórico
+      adicionarHistoricoPesquisa(codigo, produtoEncontrado);
     } catch (err) {
       showAlert("Erro ao buscar produto.");
       console.error(err);
+      adicionarHistoricoPesquisa(codigo, null);
     } finally {
       setLoading(false);
       setCodigo("");
@@ -171,41 +247,89 @@ function App() {
     }
   };
 
-  // upar as imagens
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
-    if (!file) return;
+    if (!file) {
+      setProduto((prev) => ({ ...prev, imagem: "" }));
+      showAlert("Imagem removida com sucesso!");
+      return;
+    }
 
     const reader = new FileReader();
     reader.onload = () => {
       const base64 = reader.result;
       setProduto((prev) => ({ ...prev, imagem: base64 }));
+      showAlert("Imagem carregada com sucesso!");
     };
     reader.readAsDataURL(file);
   };
 
-  // confirmar o nome e a marca modificados
-  const confirmarNomeMarca = (tipo) => {
+  const handleRemoverImagem = () => {
+    setProduto((prev) => ({ ...prev, imagem: "" }));
+    showAlert("Imagem removida com sucesso!");
+  };
+
+  const iniciarEdicaoNome = () => {
+    setNomeTemp(produto.nome);
+    setEditandoNome(true);
+  };
+
+  const iniciarEdicaoMarca = () => {
+    setMarcaTemp(produto.marca);
+    setEditandoMarca(true);
+  };
+
+  const iniciarEdicaoDescricao = () => {
+    setDescricaoTemp(produto.descricao);
+    setEditandoDescricao(true);
+  };
+
+
+  const confirmarEdicao = (tipo) => {
     if (!produto) return;
+    
     if (tipo === "nome" && nomeTemp.trim()) {
       setProduto({ ...produto, nome: nomeTemp.trim() });
       setNomeTemp("");
+      setEditandoNome(false);
+      showAlert("Nome atualizado com sucesso!");
     }
     if (tipo === "marca" && marcaTemp.trim()) {
       setProduto({ ...produto, marca: marcaTemp.trim() });
       setMarcaTemp("");
+      setEditandoMarca(false);
+      showAlert("Marca atualizada com sucesso!");
+    }
+    if (tipo === "descricao" && descricaoTemp.trim()) {
+      setProduto({ ...produto, descricao: descricaoTemp.trim() });
+      setDescricaoTemp("");
+      setEditandoDescricao(false);
+      showAlert("Descrição atualizada com sucesso!");
     }
   };
 
-  // salvar produto com preço personalizado
+  const cancelarEdicao = (tipo) => {
+    if (tipo === "nome") {
+      setEditandoNome(false);
+      setNomeTemp("");
+    }
+    if (tipo === "marca") {
+      setEditandoMarca(false);
+      setMarcaTemp("");
+    }
+    if (tipo === "descricao") {
+      setEditandoDescricao(false);
+      setDescricaoTemp("");
+    }
+  };
+
+  // Salvar produto com preço personalizado
   const salvarProdutoAtualizado = () => {
     if (!produto) return showAlert("Nenhum produto carregado.");
     if (!precoCustom && produto.preco === "Sem preço definido")
       return showAlert("Digite um preço antes de salvar!");
 
-    const precoFormatado = precoCustom
-      ? `${precoCustom}R$`
-      : produto.preco;
+    const precoFormatado = precoCustom ? `${precoCustom}R$` : produto.preco;
 
     const novosProdutos = [...produtosSalvos];
     const index = novosProdutos.findIndex((p) => p.codigo === produto.codigo);
@@ -213,18 +337,26 @@ function App() {
     const atualizado = {
       ...produto,
       preco: precoFormatado,
+      isInitial: false, 
+      updatedAt: new Date().toISOString()
     };
 
-    if (index >= 0) novosProdutos[index] = atualizado;
-    else novosProdutos.push(atualizado);
+    if (index >= 0) {
+      novosProdutos[index] = atualizado;
+    } else {
+      novosProdutos.unshift(atualizado); 
+    }
 
     salvarProdutosLocal(novosProdutos);
     setProduto(atualizado);
     setPrecoCustom("");
+    setEditandoNome(false);
+    setEditandoMarca(false);
+    setEditandoDescricao(false);
     showAlert("Produto salvo com sucesso!");
   };
 
-  // formatação dos preços
+  // Formatação dos preços
   const handlePrecoChange = (e) => {
     let valor = e.target.value.replace(/\D/g, "");
     if (valor.length > 2) valor = valor.slice(0, -2) + "," + valor.slice(-2);
@@ -245,128 +377,63 @@ function App() {
     a.download = "produtos_modificados.json";
     a.click();
     URL.revokeObjectURL(url);
+    showAlert("Arquivo JSON gerado com sucesso!");
+  };
+
+  // Gerar link API
+  const gerarLinkAPI = () => {
+    const produtosFormatados = produtosSalvos.map((p) => ({
+      ...p,
+      preco: p.preco.endsWith("R$") ? p.preco : `${p.preco}R$`,
+    }));
+
+    const dataStr = JSON.stringify(produtosFormatados, null, 2);
+    const blob = new Blob([dataStr], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    setApiLink(url);
+    showAlert("Link da API gerado com sucesso! Copie o link abaixo.");
   };
 
   return (
-    <div className={`container ${produto ? "with-product" : "centered"}`}>
-      <Alert message={alertMessage} />
-      <div className="search-section">
-        <h1>ConsulteJá</h1>
-        <p>Use a seta para cima do seu teclado para voltar ao produto anterior </p>
-        <p>Escaneie o código de barras ou digite manualmente: </p>
+    <Dashboard
+      codigo={codigo}
+      setCodigo={setCodigo}
+      produto={produto}
+      loading={loading}
+      precoCustom={precoCustom}
+      nomeTemp={nomeTemp}
+      setNomeTemp={setNomeTemp}
+      marcaTemp={marcaTemp}
+      setMarcaTemp={setMarcaTemp}
+      descricaoTemp={descricaoTemp}
+      setDescricaoTemp={setDescricaoTemp}
+      editandoNome={editandoNome}
+      editandoMarca={editandoMarca}
+      editandoDescricao={editandoDescricao}
+      inputRef={inputRef}
+      onBuscarProduto={buscarProduto}
+      onKeyPress={handleKeyPress}
+      onImageUpload={handleImageUpload}
+      onRemoverImagem={handleRemoverImagem}
+      onIniciarEdicaoNome={iniciarEdicaoNome}
+      onIniciarEdicaoMarca={iniciarEdicaoMarca}
+      onIniciarEdicaoDescricao={iniciarEdicaoDescricao}
+      onConfirmarEdicao={confirmarEdicao}
+      onCancelarEdicao={cancelarEdicao}
+      onSalvarProduto={salvarProdutoAtualizado}
+      onPrecoChange={handlePrecoChange}
+      
 
-        <div className="input-area">
-          <input
-            ref={inputRef}
-            type="text"
-            placeholder="Escaneie ou digite o código"
-            value={codigo}
-            onChange={(e) => setCodigo(e.target.value)}
-            onKeyDown={handleKeyPress}
-          />
-          <button onClick={buscarProduto}>Consultar</button>
-        </div>
-      </div>
-
-      {loading && <p className="loading ">Carregando...</p>}
-      {loading && <p className="loading-spinner "></p>}
-    
-
-      {produto && (
-        <div className="card">
-          <div className="campo-editavel">
-            <strong>Nome:</strong>{" "}
-            {produto.nome.startsWith("Produto ") ? (
-              <div className="edit-area">
-                <input
-                  type="text"
-                  value={nomeTemp}
-                  placeholder="Digite o nome do produto"
-                  onChange={(e) => setNomeTemp(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && confirmarNomeMarca("nome")}
-                />
-                <button onClick={() => confirmarNomeMarca("nome")}>Confirmar</button>
-              </div>
-            ) : (
-              <span>{produto.nome}</span>
-            )}
-          </div>
-
-          <div className="campo-editavel">
-            <strong>Marca:</strong>{" "}
-            {produto.marca === "Marca Genérica" ? (
-              <div className="edit-area">
-                <input
-                  type="text"
-                  value={marcaTemp}
-                  placeholder="Digite a marca"
-                  onChange={(e) => setMarcaTemp(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && confirmarNomeMarca("marca")}
-                />
-                <button onClick={() => confirmarNomeMarca("marca")}>Confirmar</button>
-              </div>
-            ) : (
-              <span>{produto.marca}</span>
-            )}
-          </div>
-
-          <pre className="descricao"><strong>Descrição:</strong> {produto.descricao}</pre>
-          <p className="preco"><strong>Preço:</strong> {produto.preco}</p>
-
-          {produto.imagem ? (
-            <div className="imagem-produto">
-              <img src={produto.imagem} alt={produto.nome} className="produto-img" />
-              <div className="botoes-imagem">
-                <label className="btn-alterar">
-                  Alterar imagem
-                  <input
-                    type="file"
-                    accept="image/*"
-                    style={{ display: "none" }}
-                    onChange={handleImageUpload}
-                  />
-                </label>
-                <button
-                  className="btn-remover"
-                  onClick={() => setProduto({ ...produto, imagem: "" })}
-                >
-                  Remover
-                </button>
-              </div>
-            </div>
-          ) : (
-            <div className="upload-imagem">
-              <p>Nenhuma imagem disponível. Adicione uma:</p>
-              <input type="file" accept="image/*" onChange={handleImageUpload} />
-            </div>
-          )}
-
-          <div className="preco-custom">
-            <input
-              type="text"
-              placeholder="Digite o preço (ex: 1000 = 10,00R$)"
-              value={precoCustom}
-              onChange={handlePrecoChange}
-            />
-            <button className="salvar" onClick={salvarProdutoAtualizado}>Salvar Produto</button>
-          </div>
-        </div>
-      )}
-
-      {produtosSalvos.length > 0 && (
-        <div className="lista">
-          <h3>Produtos com preços personalizados</h3>
-          <ul>
-            {produtosSalvos.map((p) => (
-              <li key={p.codigo}>
-                <strong>{p.nome}</strong> — {p.preco}
-              </li>
-            ))}
-          </ul>
-          <button onClick={gerarArquivoJSON}>Gerar API JSON</button>
-        </div>
-      )}
-    </div>
+      produtosSalvos={produtosSalvos}
+      historicoPesquisas={historicoPesquisas}
+      onGerarArquivoJSON={gerarArquivoJSON}
+      onSalvarProdutosLocal={salvarProdutosLocal}
+      onGerarLinkAPI={gerarLinkAPI}
+      onExcluirProduto={excluirProduto}
+      onResetarProdutosIniciais={resetarParaProdutosIniciais}
+      apiLink={apiLink}
+      alertMessage={alertMessage}
+    />
   );
 }
 
