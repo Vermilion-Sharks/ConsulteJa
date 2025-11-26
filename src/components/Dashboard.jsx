@@ -191,49 +191,60 @@ const Dashboard = ({
 };
 
     const startQrCodeScan = async () => {
-        try {
-            const { BrowserQRCodeReader } = await import('@zxing/browser');
-            const codeReader = new BrowserQRCodeReader();
+    try {
+        if (!videoRef.current) return;
 
-            setQrLoading(false);
+        // Ativa a câmera
+        const stream = await navigator.mediaDevices.getUserMedia({
+            video: {
+                facingMode: 'environment'
+            }
+        });
 
-            
-            const checkQrCode = async () => {
-                if (!videoRef.current || !showQrModal) return;
+        videoRef.current.srcObject = stream;
 
-                try {
-                    const result = await codeReader.decodeFromVideoElement(videoRef.current);
-                    if (result) {
-                        
-                        const code = result.getText();
+        await new Promise(resolve => {
+            videoRef.current.onloadedmetadata = () => resolve();
+        });
 
-                        if (/^\d+$/.test(code)) {
-                            setCodigo(code);
-                            closeQrModal();
-                            
-                            
-                            setTimeout(() => {
-                                onBuscarProduto();
-                            }, 500);
-                        } else {
-                            setQrError('Código inválido. Aponte para um código de barras.');
-                        }
+        const { BrowserMultiFormatReader } = await import('@zxing/browser');
+        const codeReader = new BrowserMultiFormatReader();
+
+        setQrLoading(false);
+
+        const scan = async () => {
+            if (!showQrModal) return;
+
+            try {
+                const result = await codeReader.decodeOnce(videoRef.current);
+
+                if (result) {
+                    const code = result.getText();
+
+                    if (/^\d+$/.test(code)) {
+                        setCodigo(code);
+                        closeQrModal();
+
+                        setTimeout(() => onBuscarProduto(), 300);
+                    } else {
+                        setQrError("Código inválido.");
                     }
-                } catch (error) {
                 }
+            } catch (_) {
+                requestAnimationFrame(scan);
+            }
+        };
 
-                if (showQrModal) {
-                    requestAnimationFrame(checkQrCode);
-                }
-            };
+        scan();
 
-            checkQrCode();
-        } catch (error) {
-            console.error('Erro no leitor de QR Code:', error);
-            setQrError('Erro no leitor de QR Code.');
-            setQrLoading(false);
-        }
-    };
+    } catch (error) {
+        console.log(error);
+        setQrError("Erro ao acessar a câmera.");
+        setQrLoading(false);
+    }
+};
+
+
 
     const closeQrModal = () => {
         setShowQrModal(false);
@@ -729,9 +740,6 @@ ${numColunas === 3 ? `
         playsInline
         autoPlay
         muted
-        style={{
-            backgroundColor: '#000' 
-        }}
     />
     {qrLoading && (
         <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50">
