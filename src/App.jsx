@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Alert, useAlert } from "./components/Alert";
 import Dashboard from "./components/Dashboard";
-import { initialProducts } from "./data/initialProducts";
 
 function App() {
   const [codigo, setCodigo] = useState("");
@@ -30,28 +29,58 @@ function App() {
   const carregarProdutosIniciais = () => {
     try {
       const produtosExistentes = JSON.parse(localStorage.getItem("produtos_modificados") || "[]");
+      const sanitizeProducts = (list) => {
+        if (!Array.isArray(list)) return [];
+        return list.map((p) => {
+          try {
+            const codigo = p?.codigo != null ? String(p.codigo) : '';
+            const nome = p?.nome != null ? String(p.nome) : `Produto ${codigo.slice(-4)}`;
+            const marca = p?.marca != null ? String(p.marca) : 'Marca Genérica';
+            const descricao = p?.descricao != null ? String(p.descricao) : 'Sem descrição disponível';
+
+            
+            let preco = p?.preco;
+            if (preco === undefined || preco === null || String(preco).trim() === '') {
+              preco = 'Sem preço definido';
+            } else if (typeof preco === 'number') {
+              preco = `${String(preco).replace('.', ',')}R$`;
+            } else {
+              preco = String(preco);
+              if (/\d+\.\d+/.test(preco)) preco = preco.replace('.', ',');
+              if (!/R\$/.test(preco) && !/r\$/.test(preco)) preco = `${preco}R$`;
+            }
+
+            return {
+              codigo,
+              nome,
+              marca,
+              descricao,
+              preco,
+              imagem: p?.imagem || '',
+              isImported: !!p?.isImported,
+              createdAt: p?.createdAt || new Date().toISOString(),
+              updatedAt: p?.updatedAt || null
+            };
+          } catch (err) {
+            return null;
+          }
+        }).filter(Boolean);
+      };
       if (produtosExistentes.length === 0) {
-        console.log("Carregando produtos iniciais...");
-        const produtosComTimestamp = initialProducts.map(prod => ({
-          ...prod,
-          isInitial: true,
-          createdAt: new Date().toISOString()
-        }));
-        localStorage.setItem("produtos_modificados", JSON.stringify(produtosComTimestamp));
-        setProdutosSalvos(produtosComTimestamp);
+        console.log("Nenhum produto salvo encontrado — iniciando lista vazia.");
+        localStorage.setItem("produtos_modificados", JSON.stringify([]));
+        setProdutosSalvos([]);
       } else {
-        console.log("Produtos existentes carregados:", produtosExistentes.length);
-        setProdutosSalvos(produtosExistentes);
+        const sanitized = sanitizeProducts(produtosExistentes);
+        console.log("Produtos existentes carregados (sanitizados):", sanitized.length);
+        localStorage.setItem("produtos_modificados", JSON.stringify(sanitized));
+        setProdutosSalvos(sanitized);
       }
     } catch (error) {
       console.error("Erro ao carregar produtos:", error);
-      const produtosComTimestamp = initialProducts.map(prod => ({
-        ...prod,
-        isInitial: true,
-        createdAt: new Date().toISOString()
-      }));
-      localStorage.setItem("produtos_modificados", JSON.stringify(produtosComTimestamp));
-      setProdutosSalvos(produtosComTimestamp);
+      
+      localStorage.setItem("produtos_modificados", JSON.stringify([]));
+      setProdutosSalvos([]);
     }
   };
 
@@ -64,6 +93,10 @@ function App() {
     console.log("Salvando produtos:", lista.length);
     localStorage.setItem("produtos_modificados", JSON.stringify(lista));
     setProdutosSalvos(lista);
+    
+    setTimeout(() => {
+      window.dispatchEvent(new Event('productsUpdated'));
+    }, 100);
   };
 
 
@@ -102,7 +135,6 @@ function App() {
     localStorage.setItem("historico_pesquisas", JSON.stringify(novoHistorico));
   };
 
-  // API de tradução
   const traduzirTexto = async (texto) => {
     if (!texto) return texto;
     try {
@@ -136,7 +168,7 @@ function App() {
       let descricao = "";
       let imagem = "";
 
-      // API 1 - OpenFoodFacts
+      
       try {
         const res = await fetch(`https://world.openfoodfacts.org/api/v0/product/${codigo}.json`);
         const data = await res.json();
@@ -151,7 +183,7 @@ function App() {
         console.warn("OpenFoodFacts falhou:", err);
       }
 
-      // API 2 - BrasilAPI
+      
       if (!nome || !marca) {
         try {
           const res2 = await fetch(`https://brasilapi.com.br/api/barcode/v1/${codigo}`);
@@ -165,7 +197,7 @@ function App() {
         }
       }
 
-      // API 3 - UPCItemDB
+      
       if (!nome || !marca) {
         try {
           const res3 = await fetch(`https://api.upcitemdb.com/prod/trial/lookup?upc=${codigo}`);
@@ -182,7 +214,7 @@ function App() {
         }
       }
 
-      // API 4 - ProductOpenData
+      
       if (!nome || !marca) {
         try {
           const res4 = await fetch(`https://api.productopendata.com/products/${codigo}`);
@@ -224,7 +256,6 @@ function App() {
       setEditandoMarca(false);
       setEditandoDescricao(false);
       
-      // Adicionar ao histórico
       adicionarHistoricoPesquisa(codigo, produtoEncontrado);
     } catch (err) {
       showAlert("Erro ao buscar produto.");
@@ -323,7 +354,6 @@ function App() {
     }
   };
 
-  // Salvar produto com preço personalizado
   const salvarProdutoAtualizado = () => {
     if (!produto) return showAlert("Nenhum produto carregado.");
     if (!precoCustom && produto.preco === "Sem preço definido")
@@ -356,7 +386,6 @@ function App() {
     showAlert("Produto salvo com sucesso!");
   };
 
-  // Formatação dos preços
   const handlePrecoChange = (e) => {
     let valor = e.target.value.replace(/\D/g, "");
     if (valor.length > 2) valor = valor.slice(0, -2) + "," + valor.slice(-2);
@@ -380,7 +409,6 @@ function App() {
     showAlert("Arquivo JSON gerado com sucesso!");
   };
 
-  // Gerar link API
   const gerarLinkAPI = () => {
     const produtosFormatados = produtosSalvos.map((p) => ({
       ...p,

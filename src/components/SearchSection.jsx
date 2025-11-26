@@ -32,7 +32,6 @@ const SearchSection = ({
     <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
       <h2 className="text-xl font-semibold text-gray-900 mb-4">Consultar Produto</h2>
       
-      {/* Área de Busca */}
       <div className="mb-6">
         <p className="text-gray-600 mb-3 text-sm">
           Use <kbd className="px-2 py-1 bg-gray-100 border border-gray-300 rounded text-xs font-mono">↑</kbd> para voltar ao produto anterior
@@ -70,7 +69,7 @@ const SearchSection = ({
       {produto && (
         <div className="border border-gray-200 rounded-lg p-6 animate-fade-in">
           <div className="space-y-4 mb-6">
-            {/* Nome */}
+            
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Nome do Produto</label>
               {editandoNome ? (
@@ -103,7 +102,9 @@ const SearchSection = ({
                 </div>
               ) : (
                 <div className="flex items-center justify-between group bg-gray-50 px-3 py-2 rounded-lg border border-gray-200">
-                  <span className="text-gray-900">{produto.nome}</span>
+                  <span className="text-gray-900 break-words whitespace-normal break-all flex-1">
+                    {produto.nome}
+                  </span>
                   <button
                     onClick={onIniciarEdicaoNome}
                     className="flex items-center space-x-1 text-sm text-gray-600 hover:text-black transition-all"
@@ -115,7 +116,7 @@ const SearchSection = ({
               )}
             </div>
 
-            {/* Marca */}
+            
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Marca</label>
               {editandoMarca ? (
@@ -148,7 +149,7 @@ const SearchSection = ({
                 </div>
               ) : (
                 <div className="flex items-center justify-between group bg-gray-50 px-3 py-2 rounded-lg border border-gray-200">
-                  <span className="text-gray-900">{produto.marca}</span>
+                  <span className="text-gray-900 break-words whitespace-normal break-all flex-1">{produto.marca}</span>
                   <button
                     onClick={onIniciarEdicaoMarca}
                     className="flex items-center space-x-1 text-sm text-gray-600 hover:text-black transition-all"
@@ -160,7 +161,7 @@ const SearchSection = ({
               )}
             </div>
 
-            {/* Descrição */}
+            
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Descrição</label>
               {editandoDescricao ? (
@@ -193,7 +194,7 @@ const SearchSection = ({
               ) : (
                 <div className="space-y-3">
                   <div className="flex items-start justify-between group bg-gray-50 px-3 py-2 rounded-lg border border-gray-200">
-                    <p className="text-gray-900 flex-1">{produto.descricao}</p>
+                    <p className="text-gray-900 break-words whitespace-normal break-all flex-1">{produto.descricao}</p>
                     <button
                       onClick={onIniciarEdicaoDescricao}
                       className="flex items-center space-x-1 text-sm text-gray-600 hover:text-black transition-all ml-3 flex-shrink-0"
@@ -207,17 +208,17 @@ const SearchSection = ({
             </div>
           </div>
 
-          {/* Preço Atual */}
+          
           <div className="mb-6">
             <label className="block text-sm font-medium text-gray-700 mb-2">Preço Atual</label>
             <div className="bg-gray-50 px-4 py-3 border border-gray-200 rounded-lg">
-              <span className={`text-lg font-semibold ${produto.preco === "Sem preço definido" ? "text-gray-500" : "text-green-600"}`}>
+              <span className={`text-lg font-semibold text-gray-900 break-words whitespace-normal break-all flex-1 ${produto.preco === "Sem preço definido" ? "text-gray-500" : "text-green-600"}`}>
                 {produto.preco}
               </span>
             </div>
           </div>
 
-          {/* Imagem do Produto */}
+          
           <div className="mb-6">
             <label className="block text-sm font-medium text-gray-700 mb-3">Imagem do Produto</label>
             {produto.imagem ? (
@@ -265,7 +266,6 @@ const SearchSection = ({
             )}
           </div>
 
-          {/* Preço customizado */}
           <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
             <label className="block text-sm font-medium text-gray-900 mb-3">
               Definir Preço Personalizado
