@@ -1,6 +1,9 @@
 import { useState, useRef, useEffect } from "react";
 import { Alert, useAlert } from "./components/Alert";
 import Dashboard from "./components/Dashboard";
+import Auth from "./components/Auth";
+import { Routes, Route } from "react-router-dom";
+import RotaLocalStorage from "./contexts/RotaLocalStorage";
 
 function App() {
   const [codigo, setCodigo] = useState("");
@@ -21,7 +24,9 @@ function App() {
   const { alertMessage, showAlert } = useAlert();
 
   useEffect(() => {
+    if (inputRef.current) {
     inputRef.current.focus();
+  }
     carregarProdutosIniciais();
     carregarHistoricoPesquisas();
   }, []);
@@ -423,46 +428,57 @@ function App() {
   };
 
   return (
-    <Dashboard
-      codigo={codigo}
-      setCodigo={setCodigo}
-      produto={produto}
-      loading={loading}
-      precoCustom={precoCustom}
-      nomeTemp={nomeTemp}
-      setNomeTemp={setNomeTemp}
-      marcaTemp={marcaTemp}
-      setMarcaTemp={setMarcaTemp}
-      descricaoTemp={descricaoTemp}
-      setDescricaoTemp={setDescricaoTemp}
-      editandoNome={editandoNome}
-      editandoMarca={editandoMarca}
-      editandoDescricao={editandoDescricao}
-      inputRef={inputRef}
-      onBuscarProduto={buscarProduto}
-      onKeyPress={handleKeyPress}
-      onImageUpload={handleImageUpload}
-      onRemoverImagem={handleRemoverImagem}
-      onIniciarEdicaoNome={iniciarEdicaoNome}
-      onIniciarEdicaoMarca={iniciarEdicaoMarca}
-      onIniciarEdicaoDescricao={iniciarEdicaoDescricao}
-      onConfirmarEdicao={confirmarEdicao}
-      onCancelarEdicao={cancelarEdicao}
-      onSalvarProduto={salvarProdutoAtualizado}
-      onPrecoChange={handlePrecoChange}
-      
+  <Routes>
+    <Route path="/auth" element={<Auth />} />
 
-      produtosSalvos={produtosSalvos}
-      historicoPesquisas={historicoPesquisas}
-      onGerarArquivoJSON={gerarArquivoJSON}
-      onSalvarProdutosLocal={salvarProdutosLocal}
-      onGerarLinkAPI={gerarLinkAPI}
-      onExcluirProduto={excluirProduto}
-      onResetarProdutosIniciais={resetarParaProdutosIniciais}
-      apiLink={apiLink}
-      alertMessage={alertMessage}
+    <Route
+      path="/dashboard"
+      element={
+        <RotaLocalStorage>
+          <Dashboard
+            codigo={codigo}
+            setCodigo={setCodigo}
+            produto={produto}
+            loading={loading}
+            precoCustom={precoCustom}
+            nomeTemp={nomeTemp}
+            setNomeTemp={setNomeTemp}
+            marcaTemp={marcaTemp}
+            setMarcaTemp={setMarcaTemp}
+            descricaoTemp={descricaoTemp}
+            setDescricaoTemp={setDescricaoTemp}
+            editandoNome={editandoNome}
+            editandoMarca={editandoMarca}
+            editandoDescricao={editandoDescricao}
+            inputRef={inputRef}
+            onBuscarProduto={buscarProduto}
+            onKeyPress={handleKeyPress}
+            onImageUpload={handleImageUpload}
+            onRemoverImagem={handleRemoverImagem}
+            onIniciarEdicaoNome={iniciarEdicaoNome}
+            onIniciarEdicaoMarca={iniciarEdicaoMarca}
+            onIniciarEdicaoDescricao={iniciarEdicaoDescricao}
+            onConfirmarEdicao={confirmarEdicao}
+            onCancelarEdicao={cancelarEdicao}
+            onSalvarProduto={salvarProdutoAtualizado}
+            onPrecoChange={handlePrecoChange}
+            produtosSalvos={produtosSalvos}
+            historicoPesquisas={historicoPesquisas}
+            onGerarArquivoJSON={gerarArquivoJSON}
+            onSalvarProdutosLocal={salvarProdutosLocal}
+            onGerarLinkAPI={gerarLinkAPI}
+            onExcluirProduto={excluirProduto}
+            onResetarProdutosIniciais={resetarParaProdutosIniciais}
+            apiLink={apiLink}
+            alertMessage={alertMessage}
+          />
+        </RotaLocalStorage>
+      }
     />
-  );
+
+    <Route path="*" element={<Auth />} />
+  </Routes>
+);
 }
 
 export default App;
