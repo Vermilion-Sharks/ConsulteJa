@@ -4,6 +4,7 @@ import Dashboard from "./components/Dashboard";
 import Auth from "./components/Auth";
 import { Routes, Route } from "react-router-dom";
 import RotaLocalStorage from "./contexts/RotaLocalStorage";
+import initialProducts from './data/initialProducts.js';
 
 function App() {
   const [codigo, setCodigo] = useState("");
@@ -66,7 +67,7 @@ function App() {
               createdAt: p?.createdAt || new Date().toISOString(),
               updatedAt: p?.updatedAt || null
             };
-          } catch (err) {
+          } catch {
             return null;
           }
         }).filter(Boolean);

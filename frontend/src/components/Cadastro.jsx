@@ -60,7 +60,7 @@ const Cadastro = ({ onToggleModo }) => {
       if (!resultado.sucesso) {
         setErro(resultado.erro);
       }
-    } catch (erro) {
+    } catch {
       setErro('Erro ao criar conta');
     } finally {
       setCarregando(false);
