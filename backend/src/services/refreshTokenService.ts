@@ -1,6 +1,5 @@
 import prisma from "@config/db";
-import type { UUID } from "node:crypto";
-import bcrypt from 'bcrypt';
+import { UUID, createHash } from "node:crypto";
 
 class RefreshTokenService {
 
@@ -11,11 +10,11 @@ class RefreshTokenService {
             });
 
             const expira_em = lembre_me ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) : new Date(Date.now() + 2 * 60 * 60 * 1000);
-            const refreshCriptografado = await bcrypt.hash(newRefreshToken, 12);
+            const refreshHash = createHash('sha256').update(newRefreshToken).digest('hex');
             await tx.refresh_tokens.create({
                 data: {
                     expira_em,
-                    token: refreshCriptografado,
+                    token: refreshHash,
                     session_id: newSessionId,
                     usuario_id,
                     lembre_me

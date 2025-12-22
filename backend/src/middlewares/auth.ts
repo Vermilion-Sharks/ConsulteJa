@@ -6,8 +6,7 @@ import type { AcessTokenPayload } from '@interfaces/cookiesInterfaces';
 import type { RequestCustomVS } from '@interfaces/globalInterfaces';
 import type { ErrorResponseVS } from '@interfaces/errorInterfaces';
 import RefreshTokenModel from '@models/refreshTokenModel';
-import { UUID } from 'node:crypto';
-import bcrypt from 'bcrypt';
+import { UUID, createHash } from 'node:crypto';
 import RefreshTokenService from 'services/refreshTokenService';
 import UsuarioModel from '@models/usuarioModel';
 
@@ -53,7 +52,9 @@ export async function authenticateToken(req: RequestCustomVS, res: Response, nex
         try {
             // * Usa o decoded pois aqui só pode ser um token expirado
             const acessPayload = jwt.decode(acessToken) as AcessTokenPayload;
-            const tokenData = await RefreshTokenModel.buscarRefreshTokenInfoPorUsuarioESessionId(sessionId as UUID, acessPayload.id);
+            // * Faz o hash do Refresh Token e procura no banco
+            const refreshHash = createHash("sha256").update(refreshToken).digest("hex");
+            const tokenData = await RefreshTokenModel.buscarRefreshTokenInfoPorUsuarioESessionId(sessionId as UUID, acessPayload.id, refreshHash);
             // * Se nao achou dá sessão inválida
             if(!tokenData) {
                 limparTodosCookiesDeAutenticacao(res);
@@ -66,14 +67,6 @@ export async function authenticateToken(req: RequestCustomVS, res: Response, nex
                 await RefreshTokenService.encerrarSessao(sessionId as UUID);
                 return res.status(403).json({ error: 'Sessão inválida.', type: 'Forbidden' } satisfies ErrorResponseVS);
             }
-
-            // * Compara o refresh token com o hash
-            const tokenValido = await bcrypt.compare(refreshToken, tokenData.token);
-            if(!tokenValido) {
-                limparTodosCookiesDeAutenticacao(res);
-                await RefreshTokenService.encerrarSessao(sessionId as UUID);
-                return res.status(403).json({ error: 'Sessão inválida.', type: 'Forbidden' } satisfies ErrorResponseVS);
-            };
 
             // * Extrai os dados do usuário
             const {id, nome, email, token_version} = tokenData.usuarios;
@@ -94,7 +87,7 @@ export async function authenticateToken(req: RequestCustomVS, res: Response, nex
         } catch {
             limparTodosCookiesDeAutenticacao(res);
             // * Se deu algum erro (provavelmente do banco) retorna 403
-           return res.status(403).json({ error: `Erro ao verificar token.`, type: 'Internal Server Error' } satisfies ErrorResponseVS);
+            return res.status(403).json({ error: `Erro ao verificar token.`, type: 'Forbidden' } satisfies ErrorResponseVS);
         }
     }
 

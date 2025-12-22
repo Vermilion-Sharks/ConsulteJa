@@ -54,6 +54,10 @@ const errorHandler: ErrorRequestHandler = (err: ErrorCustomVS, req: RequestCusto
             status = 400;
             error = err.message;
         }
+        if(err instanceof Erros.ErroDeCredenciaisInvalidas) {
+            status = 401;
+            error = err.message;
+        }
         if(err instanceof Erros.ErroDeAutorizacao) {
             status = 403;
             error = err.message;
@@ -64,10 +68,6 @@ const errorHandler: ErrorRequestHandler = (err: ErrorCustomVS, req: RequestCusto
         }
         if(err instanceof Erros.ErroDeConflito) {
             status = 409;
-            error = err.message;
-        }
-        if(err instanceof Erros.ErroDeCredenciaisInvalidas) {
-            status = 401;
             error = err.message;
         }
         if(err instanceof Erros.ErroDeMuitasTentativas) {
