@@ -7,6 +7,7 @@ import { limparTodosCookiesDeAutenticacao, salvarCookieAcessToken, salvarCookieR
 import type { UUID } from 'node:crypto';
 import RefreshTokenService from 'services/refreshTokenService';
 import Argon2Utils from '@utils/argon2Utils';
+import DispositivoUtils from '@utils/dispositivoUtils';
 
 class LoginController {
 
@@ -28,8 +29,12 @@ class LoginController {
             const refreshToken = salvarCookieRefreshToken(res, lembrar);
             const newSessionId = salvarCookieSessionId(res, lembrar);
             salvarCookieAcessToken(res, usuarioId, usuario.nome, email, lembrar, usuario.token_version);
+            
+            const userAgent = req.headers['user-agent'] ?? '';
+            const dispositivoNome = DispositivoUtils.pegarDispositivoNome(userAgent);
+            const dispositivoHash = DispositivoUtils.criarDispositivoHash(userAgent);
 
-            await RefreshTokenService.criarNovaSessao(refreshToken, usuarioId, lembrar, newSessionId, oldSessionId);
+            await RefreshTokenService.criarNovaSessao(refreshToken, usuarioId, lembrar, dispositivoNome, dispositivoHash, newSessionId, oldSessionId);
 
             res.status(200).json({ message: 'Logado com sucesso!'});
         } catch (err) {

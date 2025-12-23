@@ -9,6 +9,7 @@ import RefreshTokenModel from '@models/refreshTokenModel';
 import { UUID, createHash } from 'node:crypto';
 import RefreshTokenService from 'services/refreshTokenService';
 import UsuarioModel from '@models/usuarioModel';
+import DispositivoUtils from '@utils/dispositivoUtils';
 
 // * Chave secreta para o JWT
 const SECRET_KEY = process.env.JWT_SECRET!;
@@ -19,7 +20,8 @@ export async function authenticateToken(req: RequestCustomVS, res: Response, nex
     const { acessToken, refreshToken, sessionId } = req.cookies;
 
     // * Valida os três pois todos são criados simultaneamente ao fazer login, ou seja se não tiver um tem algo errado
-    if(!refreshToken || !sessionId || !acessToken) return res.status(401).json({ error: 'Você não está logado.', type: 'Unauthorized' } satisfies ErrorResponseVS);
+    if(!refreshToken || !sessionId || !acessToken)
+        return res.status(401).json({ error: 'Você não está logado.', type: 'Unauthorized' } satisfies ErrorResponseVS);
 
     // * Inicializa user como null para depois atribuir os valores
     let user: AcessTokenPayload | null = null;
@@ -52,21 +54,18 @@ export async function authenticateToken(req: RequestCustomVS, res: Response, nex
         try {
             // * Usa o decoded pois aqui só pode ser um token expirado
             const acessPayload = jwt.decode(acessToken) as AcessTokenPayload;
-            // * Faz o hash do Refresh Token e procura no banco
+            // * Faz o hash do Refresh Token e do user-agent
             const refreshHash = createHash("sha256").update(refreshToken).digest("hex");
-            const tokenData = await RefreshTokenModel.buscarRefreshTokenInfoPorUsuarioESessionId(sessionId as UUID, acessPayload.id, refreshHash);
+            const userAgent = req.headers['user-agent'] ?? '';
+            const dispositivoHash = DispositivoUtils.criarDispositivoHash(userAgent);
+
+            // * Busca no banco baseado nos dois
+            const tokenData = await RefreshTokenModel.buscarRefreshTokenInfoPorUsuarioESessionId(sessionId as UUID, acessPayload.id, refreshHash, dispositivoHash);
             // * Se nao achou dá sessão inválida
             if(!tokenData) {
                 limparTodosCookiesDeAutenticacao(res);
                 return res.status(403).json({ error: 'Sessão inválida.', type: 'Forbidden' } satisfies ErrorResponseVS);
             };
-
-            // * Se token version revogada, limpa o refresh token antigo
-            if(acessPayload.tokenVersion !== tokenData.usuarios.token_version) {
-                limparTodosCookiesDeAutenticacao(res);
-                await RefreshTokenService.encerrarSessao(sessionId as UUID);
-                return res.status(403).json({ error: 'Sessão inválida.', type: 'Forbidden' } satisfies ErrorResponseVS);
-            }
 
             // * Extrai os dados do usuário
             const {id, nome, email, token_version} = tokenData.usuarios;
@@ -78,7 +77,7 @@ export async function authenticateToken(req: RequestCustomVS, res: Response, nex
             const newRefreshToken = salvarCookieRefreshToken(res, tokenData.lembre_me);
 
             // * Salva a nova sessão no banco e apaga a antiga
-            await RefreshTokenService.criarNovaSessao(newRefreshToken, userId, tokenData.lembre_me, newSessionId, sessionId as UUID);
+            await RefreshTokenService.criarNovaSessao(newRefreshToken, userId, tokenData.lembre_me, tokenData.dispositivo_nome, tokenData.dispositivo_hash, newSessionId, sessionId as UUID);
 
             // * Passa os dados para user
             user = {

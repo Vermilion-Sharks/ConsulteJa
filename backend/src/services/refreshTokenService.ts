@@ -3,7 +3,7 @@ import { UUID, createHash } from "node:crypto";
 
 class RefreshTokenService {
 
-    static async criarNovaSessao(newRefreshToken: string, usuario_id: UUID, lembre_me: boolean, newSessionId: UUID, oldSessionId?: UUID){
+    static async criarNovaSessao(newRefreshToken: string, usuario_id: UUID, lembre_me: boolean, dispositivo_nome: string, dispositivo_hash: string, newSessionId: UUID, oldSessionId?: UUID){
         await prisma.$transaction(async(tx)=>{
             if(oldSessionId) await tx.refresh_tokens.deleteMany({
                 where: {session_id: oldSessionId}
@@ -17,7 +17,9 @@ class RefreshTokenService {
                     token: refreshHash,
                     session_id: newSessionId,
                     usuario_id,
-                    lembre_me
+                    lembre_me,
+                    dispositivo_nome,
+                    dispositivo_hash
                 }
             })
         })
