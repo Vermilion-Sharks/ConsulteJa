@@ -39,14 +39,15 @@ model produtos {
 }
 
 model usuarios {
-  id             String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  nome           String           @db.VarChar(100)
-  email          String           @unique @db.VarChar(254)
-  senha          String           @db.VarChar(255)
-  token_version  Int              @default(1)
-  data_criacao   DateTime         @default(now()) @db.Timestamptz(6)
-  apis           apis[]
-  sessoes sessoes[]
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  nome          String    @db.VarChar(100)
+  email         String    @unique @db.VarChar(254)
+  senha         String    @db.VarChar(255)
+  token_version Int       @default(1)
+  data_criacao  DateTime  @default(now()) @db.Timestamptz(6)
+  data_atualizacao DateTime @updatedAt @db.Timestamptz(6)
+  apis          apis[]
+  sessoes       sessoes[]
 
   @@index([email])
 }
@@ -63,7 +64,6 @@ model sessoes {
   expira_em        DateTime @db.Timestamp(6)
   usuarios         usuarios @relation(fields: [usuario_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
-  @@index([usuario_id])
-  @@index([expira_em])
-  @@index([usuario_id, dispositivo_hash, expira_em])
+  @@index([token, session_id, usuario_id, dispositivo_hash, expira_em])
+  @@index([usuario_id, data_criacao(sort: Desc)])
 }

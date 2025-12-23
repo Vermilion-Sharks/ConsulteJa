@@ -13,6 +13,7 @@
     "@tailwindcss/vite": "^4.1.17",
     "@vitejs/plugin-react-swc": "^4.2.1",
     "@zxing/browser": "^0.1.5",
+    "axios": "^1.13.2",
     "expo-barcode-scanner": "^13.0.1",
     "lucide-react": "^0.553.0",
     "papaparse": "^5.5.3",

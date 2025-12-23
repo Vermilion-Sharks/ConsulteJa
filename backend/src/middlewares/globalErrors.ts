@@ -1,10 +1,10 @@
 import type { ErrorCustomVS, ErrorResponseVS } from '@interfaces/errorInterfaces';
-import type { Response, ErrorRequestHandler } from 'express';
+import type { Response, ErrorRequestHandler, NextFunction } from 'express';
 import type { RequestCustomVS } from '@interfaces/globalInterfaces';
 import { ErroVS } from '@utils/erroClasses';
 import http from 'http';
 
-const errorHandler: ErrorRequestHandler = (err: ErrorCustomVS, req: RequestCustomVS, res: Response) => {
+const errorHandler: ErrorRequestHandler = (err: ErrorCustomVS, req: RequestCustomVS, res: Response, _next: NextFunction) => {
     let status = 500;
     let error = err.custom_message || 'Erro interno no servidor.';
 
