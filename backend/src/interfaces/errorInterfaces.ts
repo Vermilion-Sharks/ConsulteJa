@@ -1,6 +1,6 @@
 export interface ErrorCustomVS extends Error {
     custom_message?: string;
-    custom_status?: number;
+    status?: number;
     code?: string;
     cause?: {
         code?: string;

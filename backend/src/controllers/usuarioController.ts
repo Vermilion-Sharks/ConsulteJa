@@ -4,7 +4,7 @@ import { salvarCookieRefreshToken, salvarCookieAcessToken, salvarCookieSessionId
 import DispositivoUtils from '@utils/dispositivoUtils';
 import type { NextFunction, Response } from 'express';
 import type { UUID } from 'node:crypto';
-import RefreshTokenService from 'services/refreshTokenService';
+import SessaoService from 'services/sessaoService';
 import UsuarioService from 'services/usuarioService';
 import Erros from '@utils/erroClasses';
 
@@ -30,7 +30,7 @@ class UsuarioController {
             const dispositivoNome = DispositivoUtils.pegarDispositivoNome(userAgent);
             const dispositivoHash = DispositivoUtils.criarDispositivoHash(userAgent);
 
-            await RefreshTokenService.criarNovaSessao(refreshToken, usuarioId, true, dispositivoNome, dispositivoHash, newSessionId, oldSessionId);
+            await SessaoService.criarNovaSessao(refreshToken, usuarioId, true, dispositivoNome, dispositivoHash, newSessionId, oldSessionId);
 
             res.status(201).json({ message: "Cadastro concluído com sucesso." });
         } catch (err) {

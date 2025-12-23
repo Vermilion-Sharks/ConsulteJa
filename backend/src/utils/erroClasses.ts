@@ -1,43 +1,37 @@
-class ErroDeValidacao extends Error {
+export abstract class ErroVS extends Error{
+  abstract readonly status: number;
   constructor(message: string) {
     super(message);
-    this.name = 'ErroDeValidacao';
+    this.name = this.constructor.name;
   }
 }
 
-class ErroDeAutorizacao extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = 'ErroDeAutorizacao';
-  }
+class ErroDeValidacao extends ErroVS {
+  readonly status = 400;
 }
 
-class ErroDeNaoEncontrado extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = 'ErroDeNaoEncontrado';
-  }
+class ErroDeAutorizacao extends ErroVS {
+  readonly status = 403
 }
 
-class ErroDeConflito extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = 'ErroDeConflito';
-  }
+class ErroDeNaoEncontrado extends ErroVS {
+  readonly status = 404;
 }
 
-class ErroDeCredenciaisInvalidas extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = 'ErroDeCredenciaisInvalidas';
-  }
+class ErroDeConflito extends ErroVS {
+  readonly status = 409;
 }
 
-class ErroDeMuitasTentativas extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = 'ErroDeMuitasTentativas';
-  }
+class ErroDeCredenciaisInvalidas extends ErroVS {
+  readonly status = 401;
+}
+
+class ErroDeMuitasTentativas extends ErroVS {
+  readonly status = 429;
+}
+
+class ErroDoServidor extends ErroVS {
+  readonly status = 500;
 }
 
 export default {
@@ -46,5 +40,6 @@ export default {
   ErroDeNaoEncontrado,
   ErroDeConflito,
   ErroDeCredenciaisInvalidas,
-  ErroDeMuitasTentativas
+  ErroDeMuitasTentativas,
+  ErroDoServidor
 }

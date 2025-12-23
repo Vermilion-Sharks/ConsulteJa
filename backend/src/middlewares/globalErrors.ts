@@ -1,23 +1,12 @@
 import type { ErrorCustomVS, ErrorResponseVS } from '@interfaces/errorInterfaces';
-import type { Response, NextFunction, ErrorRequestHandler } from 'express';
+import type { Response, ErrorRequestHandler } from 'express';
 import type { RequestCustomVS } from '@interfaces/globalInterfaces';
-import Erros from '@utils/erroClasses';
+import { ErroVS } from '@utils/erroClasses';
+import http from 'http';
 
-const errorHandler: ErrorRequestHandler = (err: ErrorCustomVS, req: RequestCustomVS, res: Response, next: NextFunction) => {
-    let status = err.custom_status || 500;
+const errorHandler: ErrorRequestHandler = (err: ErrorCustomVS, req: RequestCustomVS, res: Response) => {
+    let status = 500;
     let error = err.custom_message || 'Erro interno no servidor.';
-
-    const types = {
-        400: 'Bad Request',
-        401: 'Unauthorized',
-        403: 'Forbidden',
-        404: 'Not Found',
-        409: 'Conflict',
-        413: 'Payload Too Large',
-        429: 'Too Many Requests',
-        500: 'Internal Server Error',
-        503: 'Service Unavailable',
-    };
 
     const prismaCodes = [
         'P1001',
@@ -49,34 +38,29 @@ const errorHandler: ErrorRequestHandler = (err: ErrorCustomVS, req: RequestCusto
                 error = 'Erro no banco de dados.';
                 break;
         }
-    } else {
-        if(err instanceof Erros.ErroDeValidacao) {
-            status = 400;
-            error = err.message;
-        }
-        if(err instanceof Erros.ErroDeCredenciaisInvalidas) {
-            status = 401;
-            error = err.message;
-        }
-        if(err instanceof Erros.ErroDeAutorizacao) {
-            status = 403;
-            error = err.message;
-        }
-        if(err instanceof Erros.ErroDeNaoEncontrado) {
-            status = 404;
-            error = err.message;
-        }
-        if(err instanceof Erros.ErroDeConflito) {
-            status = 409;
-            error = err.message;
-        }
-        if(err instanceof Erros.ErroDeMuitasTentativas) {
-            status = 429;
-            error = err.message;
-        }
+    } else if(err instanceof ErroVS){
+        error = err.message;
+        status = err.status;
     }
+    
+    const type = http.STATUS_CODES[status] || 'Internal Server Error';
 
-    res.status(status).json({ error, type: types[status as keyof typeof types] || 'Internal Server Error' } satisfies ErrorResponseVS);
+    if (status >= 500)
+        console.error(`Erro ${status} pego pelo handler:`,{
+            error: {
+                type,
+                name: err.name,
+                message: error,
+                stack: err.stack,
+            },
+            req: {
+                path: req.originalUrl,
+                method: req.method,
+                userId: req.user?.id || 'Não autenticado',
+            }
+        });
+
+    res.status(status).json({ error, type } satisfies ErrorResponseVS);
 }
 
 export default errorHandler;
