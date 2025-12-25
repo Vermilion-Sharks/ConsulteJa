@@ -26,6 +26,17 @@ class ValidarCampos{
         return valorTrimado;
     }
 
+    static async validarTamanhoExato(valor: string, tamanho: number, nome: string){
+        const valorTrimado = valor.trim();
+        if(!valorTrimado){
+            throw new Erros.ErroDeValidacao(`O campo ${nome} precisa ser fornecido.`)
+        }
+        if(valorTrimado.length !== tamanho){
+            throw new Erros.ErroDeValidacao(`O campo ${nome} deve ter exatamente ${tamanho} caracteres.`)
+        }
+        return valorTrimado;
+    }
+
     static validarEmail(email: string){
         const emailTrimado = email.trim();
         if(!emailTrimado){
@@ -54,7 +65,7 @@ class ValidarCampos{
             throw new Erros.ErroDeValidacao(`${nome} não pode ter menos de ${minimo} anos.`);
         }
         if (idade > maximo) {
-            throw new Erros.ErroDeValidacao(`${nome} não pode ter mais de ${minimo} anos.`);
+            throw new Erros.ErroDeValidacao(`${nome} não pode ter mais de ${maximo} anos.`);
         }
         return nascimento;
     }

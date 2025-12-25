@@ -4,7 +4,7 @@ import Erros from '@utils/erroClasses';
 class RateLimit {
     static readonly limiteGeral = rateLimit({
         windowMs: 1 * 60 * 1000,
-        max: 50,
+        max: 500,
         standardHeaders: true,
         legacyHeaders: false,
         handler: (_req, _res, next) =>

@@ -1,56 +1,49 @@
-import prisma from "@config/db";
+import SessaoModel from "@models/sessaoModel";
 import { UUID, createHash } from "node:crypto";
+import UsuarioService from "./usuarioService";
+import { gerarAcessToken, gerarRefreshToken, gerarSessionId } from "@utils/cookieUtils";
+import DispositivoUtils from "@utils/dispositivoUtils";
 
 class SessaoService {
 
-    static async criarNovaSessao(newRefreshToken: string, usuario_id: UUID, lembre_me: boolean, dispositivo_nome: string, dispositivo_hash: string, newSessionId: UUID, oldSessionId?: UUID){
-        await prisma.$transaction(async(tx)=>{
-            if(oldSessionId) await tx.sessoes.deleteMany({
-                where: {
-                    session_id: oldSessionId,
-                    usuario_id
-                }
-            });
+    static async iniciarSessao(email: string, senha: string, lembreMe: boolean, userAgent: string, oldSessionId?: UUID){
 
-            const expira_em = lembre_me ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) : new Date(Date.now() + 2 * 60 * 60 * 1000);
-            const refreshHash = createHash('sha256').update(newRefreshToken).digest('hex');
-            await tx.sessoes.create({
-                data: {
-                    expira_em,
-                    token: refreshHash,
-                    session_id: newSessionId,
-                    usuario_id,
-                    lembre_me,
-                    dispositivo_nome,
-                    dispositivo_hash
-                }
-            })
-        })
+        const usuario = await UsuarioService.validarLogin(email, senha);
+        const { id, nome, tokenVersion } = usuario;
+
+        const acessToken = gerarAcessToken(id, nome, email, tokenVersion);
+        const refreshToken = gerarRefreshToken();
+        const newSessionId = gerarSessionId();
+        const dispositivoNome = DispositivoUtils.pegarDispositivoNome(userAgent);
+        const dispositivoHash = DispositivoUtils.criarDispositivoHash(userAgent);
+
+        await SessaoService.criarNovaSessao(refreshToken, id, lembreMe, dispositivoNome, dispositivoHash, newSessionId, oldSessionId);
+
+        return {acessToken, refreshToken, newSessionId};
+
     }
 
-    static async encerrarSessao(session_id: UUID, usuario_id: UUID){
-        await prisma.sessoes.deleteMany({
-            where: {
-                session_id,
-                usuario_id
-            }
-        })
+    static async criarNovaSessao(newRefreshToken: string, usuarioId: UUID, lembreMe: boolean, dispositivoNome: string, dispositivoHash: string, newSessionId: UUID, oldSessionId?: UUID){
+
+        const expiraEm = lembreMe ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) : new Date(Date.now() + 2 * 60 * 60 * 1000);
+        const refreshHash = createHash('sha256').update(newRefreshToken).digest('hex');
+
+        await SessaoModel.criarEDeletarAnterior(
+            refreshHash, usuarioId, lembreMe, dispositivoNome, dispositivoHash, expiraEm, newSessionId, oldSessionId
+        );
+
     }
 
-    static async encerrarTodasSessoes(usuario_id: UUID){
-        await prisma.$transaction(async (tx)=>{
-            await tx.sessoes.deleteMany({
-                where: {usuario_id}
-            });
-            await tx.usuarios.update({
-                where: {id: usuario_id},
-                data: {
-                    token_version: {
-                        increment: 1
-                    }
-                }
-            });
-        });
+    static async encerrarSessao(sessionId: UUID, usuarioId: UUID){
+
+        await SessaoModel.deletarPorUsuarioESessionId(sessionId, usuarioId);
+
+    }
+
+    static async encerrarTodasSessoes(usuarioId: UUID){
+
+        await SessaoModel.deletarVariasERevogarPorUsuarioId(usuarioId);
+
     }
 
 }

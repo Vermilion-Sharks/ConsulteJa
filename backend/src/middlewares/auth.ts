@@ -1,12 +1,12 @@
 // * Imports
 import jwt, { TokenExpiredError } from 'jsonwebtoken';
-import { limparTodosCookiesDeAutenticacao, salvarCookieAcessToken, salvarCookieRefreshToken, salvarCookieSessionId } from '@utils/cookieUtils';
+import { gerarAcessToken, gerarRefreshToken, gerarSessionId, limparTodosCookiesDeAutenticacao, salvarCookieAcessToken, salvarCookieRefreshToken, salvarCookieSessionId } from '@utils/cookieUtils';
 import type { Response, NextFunction } from 'express';
 import type { AcessTokenPayload } from '@interfaces/cookiesInterfaces';
 import type { RequestCustomVS } from '@interfaces/globalInterfaces';
 import SessaoModel from '@models/sessaoModel';
 import { UUID, createHash } from 'node:crypto';
-import SessaoService from 'services/sessaoService';
+import SessaoService from '@services/sessaoService';
 import UsuarioModel from '@models/usuarioModel';
 import DispositivoUtils from '@utils/dispositivoUtils';
 import Erros from '@utils/erroClasses';
@@ -21,7 +21,7 @@ export async function VSAuth(req: RequestCustomVS, res: Response, next: NextFunc
 
     // * Valida os três pois todos são criados simultaneamente ao fazer login, ou seja se não tiver um tem algo errado
     if(!refreshToken || !sessionId || !acessToken)
-        return next(new Erros.ErroDeCredenciaisInvalidas('Você não está logado.'));
+        return next(new Erros.ErroDeCredenciaisInvalidas('Você não está logado.', 'VS_AUTH_REQUIRED'));
 
     // * Inicializa user como null para depois atribuir os valores
     let user: AcessTokenPayload | null = null;
@@ -37,7 +37,7 @@ export async function VSAuth(req: RequestCustomVS, res: Response, next: NextFunc
         if(user.tokenVersion !== tokenVersion) {
             // ? Aqui não deleta o refresh token no banco, pois se a token version atualizou é pq todos os refresh tokens foram apagados
             limparTodosCookiesDeAutenticacao(res);
-            return next(new Erros.ErroDeCredenciaisInvalidas('Sessão inválida.'));
+            return next(new Erros.ErroDeCredenciaisInvalidas('Sessão inválida.', 'VS_AUTH_INVALID'));
         }
     } catch (erro) {
         if(erro instanceof TokenExpiredError){
@@ -46,7 +46,7 @@ export async function VSAuth(req: RequestCustomVS, res: Response, next: NextFunc
         } else {
             // * Se não, já invalida
             limparTodosCookiesDeAutenticacao(res);
-            return next(new Erros.ErroDeCredenciaisInvalidas('Sessão inválida.'));
+            return next(new Erros.ErroDeCredenciaisInvalidas('Sessão inválida.', 'VS_AUTH_INVALID'));
         }
     }
 
@@ -64,20 +64,26 @@ export async function VSAuth(req: RequestCustomVS, res: Response, next: NextFunc
             // * Se nao achou dá sessão inválida ou expirada
             if(!tokenData) {
                 limparTodosCookiesDeAutenticacao(res);
-                return next(new Erros.ErroDeCredenciaisInvalidas('Sessão inválida ou expirada.'));
+                return next(new Erros.ErroDeCredenciaisInvalidas('Sessão inválida ou expirada.', 'VS_AUTH_EXPIRED'));
             };
 
             // * Extrai os dados do usuário
             const {id, nome, email, token_version} = tokenData.usuarios;
             const userId = id as UUID;
+            const lembrar = tokenData.lembre_me;
 
-            // * Salva os novos cookies
-            salvarCookieAcessToken(res, userId, nome, email, tokenData.lembre_me, token_version);
-            const newSessionId = salvarCookieSessionId(res, tokenData.lembre_me);
-            const newRefreshToken = salvarCookieRefreshToken(res, tokenData.lembre_me);
+            // * Gera a nova sessao
+            const newAcessToken = gerarAcessToken(userId, nome, email, token_version);
+            const newRefreshToken = gerarRefreshToken();
+            const newSessionId = gerarSessionId();
 
             // * Salva a nova sessão no banco e apaga a antiga
-            await SessaoService.criarNovaSessao(newRefreshToken, userId, tokenData.lembre_me, tokenData.dispositivo_nome, tokenData.dispositivo_hash, newSessionId, sessionId as UUID);
+            await SessaoService.criarNovaSessao(newRefreshToken, userId, lembrar, tokenData.dispositivo_nome, tokenData.dispositivo_hash, newSessionId, sessionId as UUID);
+
+            // * Salva os cookies com a nova sessao
+            salvarCookieAcessToken(res, newAcessToken, lembrar);
+            salvarCookieRefreshToken(res, newRefreshToken, lembrar);
+            salvarCookieSessionId(res, newSessionId, lembrar);
 
             // * Passa os dados para user
             user = {
@@ -93,7 +99,7 @@ export async function VSAuth(req: RequestCustomVS, res: Response, next: NextFunc
     // * Se der algum problema com user tem uma validação de garantia
     if (!user) {
         limparTodosCookiesDeAutenticacao(res);
-        return next(new Erros.ErroDeCredenciaisInvalidas('Não autenticado.'));
+        return next(new Erros.ErroDeCredenciaisInvalidas('Não autenticado.', 'VS_AUTH_INVALID'));
     }
     // * Passa o user para a próxima função
     req.user = user;

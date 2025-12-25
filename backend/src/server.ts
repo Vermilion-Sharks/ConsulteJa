@@ -7,7 +7,7 @@ import http from 'http';
 import path from 'path';
 import cors from 'cors';
 import corsConfig from '@config/cors';
-import errorHandler from '@middlewares/globalErrors';
+import errorHandler from '@middlewares/errorHandler';
 import RateLimit from '@middlewares/rateLimit';
 
 // * Inicialização do servidor
@@ -15,6 +15,7 @@ const app: Application = express();
 const port = process.env.PORT || 3000;
 const server = http.createServer(app);
 const frontend = path.join(__dirname, '../../frontend');
+app.set('trust proxy', 1);
 
 // * Middlewares globais
 app.use(cookieParser());

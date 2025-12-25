@@ -1,37 +1,14 @@
 import type { ErrorCustomVS } from '@interfaces/errorInterfaces';
 import { RequestCustomVS } from '@interfaces/globalInterfaces';
-import { salvarCookieRefreshToken, salvarCookieAcessToken, salvarCookieSessionId } from '@utils/cookieUtils';
-import DispositivoUtils from '@utils/dispositivoUtils';
 import type { NextFunction, Response } from 'express';
-import type { UUID } from 'node:crypto';
-import SessaoService from 'services/sessaoService';
-import UsuarioService from 'services/usuarioService';
-import Erros from '@utils/erroClasses';
+import UsuarioService from '@services/usuarioService';
 
 class UsuarioController {
 
     static async cadastrar(req: RequestCustomVS, res: Response, next: NextFunction){
         try {
-            const { nome, email, senha } = req.body as {nome?: string, email?: string, senha?: string};
-
-            if(!email || !senha || !nome) throw new Erros.ErroDeValidacao('Informações faltando para o cadastro.');
-
-            const usuario = await UsuarioService.cadastrarUsuario(nome, email, senha);
-
-            const usuarioId = usuario.id as UUID;
-
-            const oldSessionId = req.cookies.sessionId as UUID | undefined;
-
-            const refreshToken = salvarCookieRefreshToken(res, true);
-            const newSessionId = salvarCookieSessionId(res, true);
-            salvarCookieAcessToken(res, usuarioId, nome, email, true, usuario.token_version);
-
-            const userAgent = req.headers['user-agent'] ?? '';
-            const dispositivoNome = DispositivoUtils.pegarDispositivoNome(userAgent);
-            const dispositivoHash = DispositivoUtils.criarDispositivoHash(userAgent);
-
-            await SessaoService.criarNovaSessao(refreshToken, usuarioId, true, dispositivoNome, dispositivoHash, newSessionId, oldSessionId);
-
+            const { nome, email, senha } = req.body;
+            await UsuarioService.cadastrarUsuario(nome, email, senha);
             res.status(201).json({ message: "Cadastro concluído com sucesso." });
         } catch (err) {
             const erro = err as ErrorCustomVS;

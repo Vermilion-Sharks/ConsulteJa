@@ -31,31 +31,25 @@ export function limparTodosCookiesDeAutenticacao(res: Response) {
   limparCookieSessionId(res);
 }
 
-export function salvarCookieAcessToken(res: Response, id: UUID, nome: string, email: string, lembreMe: boolean, tokenVersion: number){
-  const acessToken = jwt.sign({ id, nome, email, tokenVersion } satisfies AcessTokenPayload, SECRET_KEY, { expiresIn: '15m' });
+export function salvarCookieAcessToken(res: Response, acessToken: string, lembreMe: boolean){
   res.cookie('acessToken', acessToken, {
     ...cookieOptions,
     maxAge: lembreMe ? 30*24*60*60*1000 : 2*60*60*1000
   });
-  return acessToken;
 }
 
-export function salvarCookieRefreshToken(res: Response, lembreMe: boolean){
-  const refreshToken = crypto.randomBytes(64).toString("hex");
+export function salvarCookieRefreshToken(res: Response, refreshToken: string, lembreMe: boolean){
   res.cookie('refreshToken', refreshToken, {
     ...cookieOptions,
     maxAge: lembreMe ? 30*24*60*60*1000 : 2*60*60*1000
   });
-  return refreshToken;
 }
 
-export function salvarCookieSessionId(res: Response, lembreMe: boolean){
-  const sessionId = crypto.randomUUID();
+export function salvarCookieSessionId(res: Response, sessionId: UUID, lembreMe: boolean){
   res.cookie('sessionId', sessionId, {
     ...cookieOptions,
     maxAge: lembreMe ? 30*24*60*60*1000 : 2*60*60*1000
   });
-  return sessionId;
 }
 
 export function validarCookieToken(tkn: string){
@@ -65,4 +59,19 @@ export function validarCookieToken(tkn: string){
   } catch {
     return false;
   }
+}
+
+export function gerarAcessToken(id: UUID, nome: string, email: string, tokenVersion: number){
+  const acessToken = jwt.sign({ id, nome, email, tokenVersion } satisfies AcessTokenPayload, SECRET_KEY, { expiresIn: '15m' });
+  return acessToken;
+}
+
+export function gerarRefreshToken(){
+  const refreshToken = crypto.randomBytes(64).toString("hex");
+  return refreshToken;
+}
+
+export function gerarSessionId(){
+  const sessionId = crypto.randomUUID();
+  return sessionId;
 }

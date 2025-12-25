@@ -1,4 +1,4 @@
-import type { ErrorCustomVS, ErrorResponseVS } from '@interfaces/errorInterfaces';
+import type { ErrorCustomVS, ErrorResponseVS, ErrorTypeVS } from '@interfaces/errorInterfaces';
 import type { Response, ErrorRequestHandler, NextFunction } from 'express';
 import type { RequestCustomVS } from '@interfaces/globalInterfaces';
 import { ErroVS } from '@utils/erroClasses';
@@ -7,6 +7,7 @@ import http from 'http';
 const errorHandler: ErrorRequestHandler = (err: ErrorCustomVS, req: RequestCustomVS, res: Response, _next: NextFunction) => {
     let status = 500;
     let error = err.custom_message || 'Erro interno no servidor.';
+    let customType: ErrorTypeVS;
 
     const prismaCodes = [
         'P1001',
@@ -21,29 +22,35 @@ const errorHandler: ErrorRequestHandler = (err: ErrorCustomVS, req: RequestCusto
             case 'P1001':
                 status = 503;
                 error = 'Erro ao tentar acessar o banco de dados.';
+                customType = 'VS_DB_UNAVAILABLE';
                 break;
             case 'P2002':
                 status = 409;
                 error = err.custom_message || 'Violação de chave única.';
+                customType = 'VS_CONFLICT';
                 break;
             case 'P2025':
                 status = 404;
                 error = err.custom_message || 'Não encontrado.';
+                customType = 'VS_NOT_FOUND';
                 break;
             case '22P02':
                 status = 400;
                 error = err.custom_message || 'Campo com formato inválido.';
+                customType = 'VS_VALIDATION';
                 break;
             default:
                 error = 'Erro no banco de dados.';
+                customType = 'VS_SERVER_ERROR';
                 break;
         }
     } else if(err instanceof ErroVS){
         error = err.message;
         status = err.status;
+        customType = err.type;
     }
     
-    const type = http.STATUS_CODES[status] || 'Internal Server Error';
+    const type = customType! || http.STATUS_CODES[status] || 'Internal Server Error';
 
     if (status >= 500)
         console.error(`Erro ${status} pego pelo handler:`,{

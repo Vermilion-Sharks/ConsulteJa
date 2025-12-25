@@ -15,9 +15,8 @@ const corsConfig: CorsOptions = {
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: [
         'Content-Type',
-        'X-Requested-With',
-        'Accept',
-        'Origin',
+        'Authorization',
+        'X-API-Key',
     ],
     exposedHeaders: ['Content-Disposition'],
     credentials: true,

@@ -11,3 +11,16 @@ export interface ErrorResponseVS {
     error: string;
     type: string;
 };
+
+export type ErrorTypeVS =
+    | 'VS_VALIDATION'
+    | 'VS_UNAUTHORIZED'
+    | 'VS_NOT_FOUND'
+    | 'VS_CONFLICT'
+    | 'VS_INVALID'
+    | 'VS_MANY_REQUESTS'
+    | 'VS_SERVER_ERROR'
+    | 'VS_DB_UNAVAILABLE'
+    | 'VS_AUTH_REQUIRED'
+    | 'VS_AUTH_INVALID'
+    | 'VS_AUTH_EXPIRED'

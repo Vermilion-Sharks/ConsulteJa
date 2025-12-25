@@ -3,8 +3,14 @@ import type { UUID } from "crypto";
 
 class UsuarioModel {
 
+    static async criar(nome: string, email: string, senha: string){
+        await prisma.usuarios.create({
+            data: {nome, email, senha}
+        });
+    }
+
     static async buscarLoginInfoPorEmail(email: string){
-        const resultado = await prisma.usuarios.findUniqueOrThrow({
+        const resultado = await prisma.usuarios.findUnique({
             where: {email},
             select: {
                 id: true,
