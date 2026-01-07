@@ -1,23 +1,23 @@
 import rateLimit from 'express-rate-limit';
-import Erros from '@utils/erroClasses';
+import Errors from '@utils/errorClasses';
 
 class RateLimit {
-    static readonly limiteGeral = rateLimit({
+    static readonly general = rateLimit({
         windowMs: 1 * 60 * 1000,
-        max: 500,
+        max: 50,
         standardHeaders: true,
         legacyHeaders: false,
         handler: (_req, _res, next) =>
-            next(new Erros.ErroDeMuitasTentativas('Muitas requisições, tente novamente mais tarde.')),
+            next(new Errors.ManyRequestsError('Muitas requisições, tente novamente mais tarde.')),
     });
 
-    static readonly limiteLogin = rateLimit({
+    static readonly login = rateLimit({
         windowMs: 5 * 60 * 1000,
         max: 5,
         standardHeaders: true,
         legacyHeaders: false,
         handler: (_req, _res, next) =>
-            next(new Erros.ErroDeMuitasTentativas('Muitas tentativas de login, tente novamente em 5 minutos.')),
+            next(new Errors.ManyRequestsError('Muitas tentativas de login, tente novamente mais tarde.')),
     });
 }
 

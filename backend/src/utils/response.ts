@@ -1,0 +1,6 @@
+import { ResponseCustomVS } from '@schemas/shared/response';
+import type { Response as Res } from 'express';
+
+export function ResponseVS(res: Res, content: ResponseCustomVS, status: number = 200){
+    return res.status(status).json(content); 
+}

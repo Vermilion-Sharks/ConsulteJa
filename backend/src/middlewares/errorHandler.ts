@@ -1,13 +1,15 @@
-import type { ErrorCustomVS, ErrorResponseVS, ErrorTypeVS } from '@interfaces/errorInterfaces';
+import type { ErrorCustomVS, ErrorIssue, ErrorResponseVS, ErrorTypeVS } from '@schemas/shared/error';
 import type { Response, ErrorRequestHandler, NextFunction } from 'express';
-import type { RequestCustomVS } from '@interfaces/globalInterfaces';
-import { ErroVS } from '@utils/erroClasses';
+import type { RequestCustomVS } from '@schemas/shared/request';
+import { ErrorVS } from '@utils/errorClasses';
 import http from 'http';
+import { ZodError } from 'zod';
 
 const errorHandler: ErrorRequestHandler = (err: ErrorCustomVS, req: RequestCustomVS, res: Response, _next: NextFunction) => {
     let status = 500;
     let error = err.custom_message || 'Erro interno no servidor.';
     let customType: ErrorTypeVS;
+    let issues: ErrorIssue[] | undefined;
 
     const prismaCodes = [
         'P1001',
@@ -44,10 +46,24 @@ const errorHandler: ErrorRequestHandler = (err: ErrorCustomVS, req: RequestCusto
                 customType = 'VS_SERVER_ERROR';
                 break;
         }
-    } else if(err instanceof ErroVS){
+    } else if(err instanceof ErrorVS){
         error = err.message;
         status = err.status;
         customType = err.type;
+    } else if (err instanceof ZodError){
+        console.error(err.issues);
+        issues = err.issues.map(iss=>({
+            field: iss.code==='unrecognized_keys' ?
+                iss.keys.join('.') :
+                iss.path.join('.') || 'unknown',
+            message: iss.code==='unrecognized_keys' ?
+                'Chave não reconhecida.' :
+                iss.message
+        }));
+
+        status = 400;
+        error = issues.map(iss=>`${iss.field}: '${iss.message}'`).join('; ');
+        customType = 'VS_VALIDATION';
     }
     
     const type = customType! || http.STATUS_CODES[status] || 'Internal Server Error';
@@ -67,7 +83,7 @@ const errorHandler: ErrorRequestHandler = (err: ErrorCustomVS, req: RequestCusto
             }
         });
 
-    res.status(status).json({ error, type } satisfies ErrorResponseVS);
+    res.status(status).json({ error, type, ...(issues?{issues}:{}) } satisfies ErrorResponseVS);
 }
 
 export default errorHandler;

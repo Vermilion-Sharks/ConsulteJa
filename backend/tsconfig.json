@@ -14,16 +14,16 @@
     "moduleResolution": "node",
     "baseUrl": "src",
     "paths": {
-      "@config/*": ["config/*"],
+      "@configs/*": ["configs/*"],
       "@controllers/*": ["controllers/*"],
       "@interfaces/*": ["interfaces/*"],
       "@middlewares/*": ["middlewares/*"],
       "@models/*": ["models/*"],
       "@routes/*": ["routes/*"],
       "@services/*": ["services/*"],
-      // "@sockets/*": ["sockets/*"],
-      // "@tasks/*": ["tasks/*"],
-      "@utils/*": ["utils/*"]
+      "@tasks/*": ["tasks/*"],
+      "@utils/*": ["utils/*"],
+      "@schemas/*": ["schemas/*"]
     },
     "noEmit": false,
     "allowSyntheticDefaultImports": true,

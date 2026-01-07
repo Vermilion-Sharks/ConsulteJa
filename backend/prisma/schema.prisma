@@ -7,7 +7,7 @@ datasource db {
   provider = "postgresql"
 }
 
-model apis {
+model cj_apis {
   id               String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   api_key          String     @unique @db.VarChar(64)
   ativa            Boolean    @default(true)
@@ -16,10 +16,8 @@ model apis {
   data_atualizacao DateTime   @updatedAt @db.Timestamptz(6)
   data_desativacao DateTime?  @db.Timestamptz(6)
   ultimo_uso       DateTime?  @db.Timestamptz(6)
-  usuarios         usuarios   @relation(fields: [usuario_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users            users      @relation(fields: [usuario_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   produtos         produtos[]
-
-  @@index([usuario_id])
 }
 
 model produtos {
@@ -34,38 +32,32 @@ model produtos {
   api_id           String   @db.Uuid
   data_criacao     DateTime @default(now()) @db.Timestamptz(6)
   data_atualizacao DateTime @updatedAt @db.Timestamptz(6)
-  apis             apis     @relation(fields: [api_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  cj_apis          cj_apis  @relation(fields: [api_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@unique([api_id, codigo])
-  @@index([api_id])
 }
 
-model usuarios {
-  id               String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  nome             String    @db.VarChar(100)
-  email            String    @unique @db.VarChar(254)
-  senha            String    @db.VarChar(255)
-  token_version    Int       @default(1)
-  data_criacao     DateTime  @default(now()) @db.Timestamptz(6)
-  data_atualizacao DateTime  @updatedAt @db.Timestamptz(6)
-  apis             apis[]
-  sessoes          sessoes[]
-
-  @@index([email])
+model users {
+  id            String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name          String     @db.VarChar(100)
+  email         String     @unique @db.VarChar(254)
+  password      String     @db.VarChar(255)
+  token_version Int        @default(1)
+  created_at    DateTime   @default(now()) @db.Timestamptz(6)
+  updated_at    DateTime   @updatedAt @db.Timestamptz(6)
+  sessions      sessions[]
+  cj_apis       cj_apis[]
 }
 
-model sessoes {
-  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  usuario_id       String   @db.Uuid
-  token            String   @unique @db.VarChar(64)
-  session_id       String   @unique @db.Uuid
-  lembre_me        Boolean  @default(false)
-  dispositivo_nome String   @db.VarChar(100)
-  dispositivo_hash String   @db.VarChar(64)
-  data_criacao     DateTime @default(now()) @db.Timestamp(6)
-  expira_em        DateTime @db.Timestamp(6)
-  usuarios         usuarios @relation(fields: [usuario_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-
-  @@index([token, session_id, usuario_id, dispositivo_hash, expira_em])
-  @@index([usuario_id, data_criacao(sort: Desc)])
+model sessions {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id     String   @db.Uuid
+  token       String   @unique @db.VarChar(64)
+  session_id  String   @unique @db.Uuid
+  remember_me Boolean  @default(false)
+  device_name String   @db.VarChar(100)
+  device_hash String   @db.VarChar(64)
+  created_at  DateTime @default(now()) @db.Timestamptz(6)
+  expires_in  DateTime @db.Timestamptz(6)
+  users       users    @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 }
