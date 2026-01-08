@@ -19,6 +19,15 @@ class RateLimit {
         handler: (_req, _res, next) =>
             next(new Errors.ManyRequestsError('Muitas tentativas de login, tente novamente mais tarde.')),
     });
+
+    static readonly genApiKey = rateLimit({
+        windowMs: 5 * 60 * 1000,
+        max: 2,
+        standardHeaders: true,
+        legacyHeaders: false,
+        handler: (_req, _res, next) =>
+            next(new Errors.ManyRequestsError('Você gerou uma nova API key a pouco tempo, aguarde para gerar novamente.')),
+    });
 }
 
 export default RateLimit;

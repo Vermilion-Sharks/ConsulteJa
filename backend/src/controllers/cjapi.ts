@@ -1,4 +1,5 @@
 import CjapiModel from '@models/cjapi';
+import { addProductSchema } from '@schemas/controllers/cjapi';
 import { uuidSchema } from '@schemas/shared/basics';
 import { ErrorCustomVS } from '@schemas/shared/error';
 import { RequestAuthVS } from '@schemas/shared/request';
@@ -48,6 +49,19 @@ class CjapiController {
         } catch (err) {
             const erro = err as ErrorCustomVS;
             if(erro.code==='P2025') erro.custom_message = 'API não existe ou não é sua.';
+            next(erro);
+        }
+    }
+
+    static async addProduct(req: RequestAuthVS, res: Response, next: NextFunction){
+        try {
+            const { id: userId } = req.user;
+            const cjapiId = uuidSchema.parse(req.params.cjapiId);
+            const data = addProductSchema.parse(req.body);
+            const { codigo, descricao, imagem, marca, nome, preco, importado } = data;
+            ResponseVS(res, {message: 'Produto cadastrado com sucesso.'});
+        } catch (err) {
+            const erro = err as ErrorCustomVS;
             next(erro);
         }
     }

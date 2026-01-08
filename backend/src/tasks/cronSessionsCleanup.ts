@@ -16,14 +16,14 @@ const sessionsCleanup = cron.schedule('0 * * * *', async () => {
         }
       }
     });
-    const message = `Tokens expirados removidos: ${deleted.count}`;
+    const message = `Sessões expiradas removidos: ${deleted.count}`;
     task = message;
     console.log(message);
   }
   catch(err){
     const error = err as ErrorCustomVS;
-    taskError = 'Erro ao remover candidatos com codigos expirados: ' + error.message;
-    console.error('Erro ao remover candidatos com codigos expirados:', error)
+    taskError = 'Erro ao remover sessões expiradas: ' + error.message;
+    console.error('Erro ao remover sessões expiradas:', error);
   }
   finally{
     end = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });

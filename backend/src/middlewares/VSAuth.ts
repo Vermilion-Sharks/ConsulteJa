@@ -60,7 +60,7 @@ export async function VSAuth(req: RequestCustomVS, res: Response, next: NextFunc
             const dispositivoHash = DeviceUtils.createDeviceHash(userAgent);
 
             // * Busca no banco baseado nos dois
-            const tokenData = await SessionModel.findValidSessionInfo(sessionId as UUID, acessPayload.id, refreshHash, dispositivoHash);
+            const tokenData = await SessionModel.findValidInfo(sessionId as UUID, acessPayload.id, refreshHash, dispositivoHash);
             // * Se nao achou dá sessão inválida ou expirada
             if(!tokenData) {
                 CookieUtils.clearAllCookiesAuth(res);

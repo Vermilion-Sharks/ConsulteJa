@@ -52,7 +52,7 @@ class AuthController {
     static async list(req: RequestAuthVS, res: Response, next: NextFunction){
         try {
             const { id } = req.user;
-            const sessoes = await SessionModel.findSessionsByUserId(id);
+            const sessoes = await SessionModel.findManyByUserId(id);
             ResponseVS(res, {data: sessoes});
         } catch (err) {
             const erro = err as ErrorCustomVS;

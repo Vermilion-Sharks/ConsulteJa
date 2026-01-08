@@ -27,6 +27,7 @@ class CjapiModel {
     static async findManyByUserId(userId: UUID, db: ClientOrTransaction = prisma){
         const result = await db.cj_apis.findMany({
             select: {
+                id: true,
                 ativa: true,
                 data_criacao: true,
                 data_atualizacao: true,
@@ -34,6 +35,22 @@ class CjapiModel {
                 ultimo_uso: true
             },
             where: {usuario_id: userId}
+        });
+        return result;
+    }
+
+    static async findByIdAndUserId(id: UUID, userId: UUID, db: ClientOrTransaction = prisma){
+        const result = await db.cj_apis.findUnique({
+            select: {
+                ativa: true,
+                data_criacao: true,
+                data_atualizacao: true,
+                data_desativacao: true,
+                ultimo_uso: true
+            },
+            where: {
+                id, usuario_id: userId
+            }
         });
         return result;
     }

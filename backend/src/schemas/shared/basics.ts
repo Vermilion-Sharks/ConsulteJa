@@ -5,3 +5,4 @@ export const numberSchema = z.number('Campo deve ser um number.');
 export const booleanSchema = z.boolean('Campo deve ser um boolean.');
 export const uuidSchema = z.uuid('UUID inválido.');
 export const emailSchema = z.email('Email inválido.');
+export const urlSchema = z.url('URL inválida');

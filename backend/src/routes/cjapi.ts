@@ -6,6 +6,7 @@ const router = express.Router();
 
 router.post('/cjapi', VSAuth, CjapiController.create as RequestHandler);
 router.get('/cjapi', VSAuth, CjapiController.list as RequestHandler);
-router.post('/cjapi/:cjapiId/apikey', VSAuth);
+router.post('/cjapi/:cjapiId/apikey', VSAuth, CjapiController.genApiKey as RequestHandler);
+router.post('/cjapi', VSAuth, )
 
 export default router;

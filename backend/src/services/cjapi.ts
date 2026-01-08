@@ -3,6 +3,7 @@ import type { UUID } from "node:crypto";
 import Errors from '@utils/errorClasses';
 import ApiKeyUtils from "@utils/apiKey";
 import prisma from "@configs/db";
+import ProdutoModel from "@models/produto";
 
 
 class CjapiService {
@@ -37,6 +38,16 @@ class CjapiService {
         await CjapiModel.updateApiKeyByIdAndUserId(cjapiId, userId, apiKeyHash);
 
         return apiKey;
+    }
+
+    static async addProduct(cjapiId: UUID, userId: UUID, codigo: string, descricao: string, marca: string, nome: string, preco: string, imagem?: string, importado?: boolean){
+
+        const product = {
+            codigo, descricao, marca, nome, preco, imagem, importado
+        }
+
+        await ProdutoModel.create(cjapiId, product);
+
     }
 
 }

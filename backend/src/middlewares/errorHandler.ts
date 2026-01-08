@@ -14,6 +14,7 @@ const errorHandler: ErrorRequestHandler = (err: ErrorCustomVS, req: RequestCusto
     const prismaCodes = [
         'P1001',
         'P2002',
+        'P2003',
         'P2025',
         '22P02'
     ];
@@ -30,6 +31,11 @@ const errorHandler: ErrorRequestHandler = (err: ErrorCustomVS, req: RequestCusto
                 status = 409;
                 error = err.custom_message || 'Violação de chave única.';
                 customType = 'VS_CONFLICT';
+                break;
+            case 'P2003':
+                status = 400;
+                error = err.custom_message || 'Chave estrangeira inválida.';
+                customType = 'VS_VALIDATION';
                 break;
             case 'P2025':
                 status = 404;
@@ -51,15 +57,18 @@ const errorHandler: ErrorRequestHandler = (err: ErrorCustomVS, req: RequestCusto
         status = err.status;
         customType = err.type;
     } else if (err instanceof ZodError){
-        console.error(err.issues);
-        issues = err.issues.map(iss=>({
-            field: iss.code==='unrecognized_keys' ?
-                iss.keys.join('.') :
-                iss.path.join('.') || 'unknown',
-            message: iss.code==='unrecognized_keys' ?
-                'Chave não reconhecida.' :
-                iss.message
-        }));
+        issues = [];
+        err.issues.forEach(iss=>{
+            if(iss.code==='unrecognized_keys')
+                return iss.keys.forEach(i=>issues!.push({
+                    field: i,
+                    message: 'Chave não reconhecida.'
+                }));
+            issues!.push({
+                field: iss.path.join('.') || 'param',
+                message: iss.message
+            })
+        });
 
         status = 400;
         error = issues.map(iss=>`${iss.field}: '${iss.message}'`).join('; ');
