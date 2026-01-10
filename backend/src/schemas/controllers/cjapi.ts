@@ -39,3 +39,11 @@ export const addProductSchema = z.strictObject({
     imagem: urlSchema.optional(),
     importado: booleanSchema.optional()
 });
+
+export const updateApiStatusSchema = z.strictObject({
+    active: booleanSchema
+});
+
+export const findProductsQuerySchema = z.object({
+    page: stringSchema.transform(Number).optional()
+});

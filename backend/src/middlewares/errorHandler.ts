@@ -71,7 +71,7 @@ const errorHandler: ErrorRequestHandler = (err: ErrorCustomVS, req: RequestCusto
         });
 
         status = 400;
-        error = issues.map(iss=>`${iss.field}: '${iss.message}'`).join('; ');
+        error = 'Campos inválidos.';
         customType = 'VS_VALIDATION';
     }
     

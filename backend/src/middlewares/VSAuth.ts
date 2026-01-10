@@ -5,7 +5,7 @@ import type { Response, NextFunction } from 'express';
 import type { AccessTokenPayload } from '@schemas/shared/cookies';
 import type { RequestCustomVS } from '@schemas/shared/request';
 import SessionModel from '@models/session';
-import { UUID, createHash } from 'node:crypto';
+import { type UUID, createHash } from 'node:crypto';
 import UserModel from '@models/user';
 import DeviceUtils from '@utils/device';
 import Errors from '@utils/errorClasses';
@@ -26,11 +26,11 @@ export async function VSAuth(req: RequestCustomVS, res: Response, next: NextFunc
     // * Inicializa user como null para depois atribuir os valores
     let user: AccessTokenPayload | null = null;
 
-    // * Booleano para decidir se vai atualizar a sessão (acess token expirado)
+    // * Booleano para decidir se vai atualizar a sessão (access token expirado)
     let tryRefresh = false;
 
     try {
-        // * Valida o acess token
+        // * Valida o access token
         user = jwt.verify(accessToken, JWT_SECRET) as AccessTokenPayload;
         // * Se está tudo certo valida a token version para garantir que não foi revogado
         const tokenVersion = await UserModel.findTokenVersionById(user.id);
@@ -52,25 +52,38 @@ export async function VSAuth(req: RequestCustomVS, res: Response, next: NextFunc
 
     if(tryRefresh){
         try {
-            // * Usa o decoded pois aqui só pode ser um token expirado
-            const acessPayload = jwt.decode(accessToken) as AccessTokenPayload;
-            // * Faz o hash do Refresh Token e do user-agent
-            const refreshHash = createHash("sha256").update(refreshToken).digest("hex");
-            const userAgent = req.headers['user-agent'] ?? '';
-            const dispositivoHash = DeviceUtils.createDeviceHash(userAgent);
+            const visitorId = req.headers['x-fingerprint-visitorid'];
+            if(!visitorId)
+                return next(new Errors.InvalidCredentialsError('Não foi possível identificar sua sessão.', 'VS_AUTH_REQUIRED'));
+            // * Usa o decode pois aqui só pode ser um token expirado
+            const accessPayload = jwt.decode(accessToken) as AccessTokenPayload;
+
+            // * Faz o hash do Refresh Token e do visitorId
+            const deviceHash = DeviceUtils.createDeviceHash(visitorId);
+            const refreshHash = createHash('sha256').update(refreshToken).digest('hex');
 
             // * Busca no banco baseado nos dois
-            const tokenData = await SessionModel.findValidInfo(sessionId as UUID, acessPayload.id, refreshHash, dispositivoHash);
-            // * Se nao achou dá sessão inválida ou expirada
-            if(!tokenData) {
+            const sessionData = await SessionModel.findInfoByUserAndSessionId(accessPayload.id, sessionId as UUID);
+
+            // * Se não achou limpa os cookies e dá sessão inválida ou expirada
+            if(!sessionData){
+                CookieUtils.clearAllCookiesAuth(res);
+                return next(new Errors.InvalidCredentialsError('Sessão inválida ou expirada.', 'VS_AUTH_EXPIRED'));
+            };
+
+            const isValidCredentials = refreshHash===sessionData.token && deviceHash===sessionData.device_hash;
+            
+            // * Se os dados estão inválidos dá sessão inválida ou expirada e limpa do banco
+            if(!isValidCredentials) {
+                await SessionModel.deleteByUserAndSessionId(accessPayload.id, sessionId);
                 CookieUtils.clearAllCookiesAuth(res);
                 return next(new Errors.InvalidCredentialsError('Sessão inválida ou expirada.', 'VS_AUTH_EXPIRED'));
             };
 
             // * Extrai os dados do usuário
-            const {id, name, email, token_version} = tokenData.users;
+            const {id, name, email, token_version} = sessionData.users;
             const userId = id as UUID;
-            const remember = tokenData.remember_me;
+            const remember = sessionData.remember_me;
 
             // * Gera a nova sessao
             const newAcessToken = CookieUtils.generateAccessToken(userId, name, email, token_version);
@@ -78,7 +91,7 @@ export async function VSAuth(req: RequestCustomVS, res: Response, next: NextFunc
             const newSessionId = CookieUtils.generateSessionId();
 
             // * Salva a nova sessão no banco e apaga a antiga
-            await AuthService.refreshSession(newRefreshToken, userId, remember, tokenData.device_name, tokenData.device_hash, newSessionId, sessionId as UUID);
+            await AuthService.refreshSession(newRefreshToken, userId, remember, sessionData.device_name, sessionData.device_hash, newSessionId, sessionId as UUID);
 
             // * Salva os cookies com a nova sessao
             CookieUtils.saveCookieAccessToken(res, newAcessToken, remember);

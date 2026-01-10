@@ -17,11 +17,31 @@ class CjapiModel {
         return result;
     }
 
-    static async updateApiKeyByIdAndUserId(id: UUID, userId: UUID, apiKeyHash: string, db: ClientOrTransaction = prisma){
+    static async updateApiKeyById(id: UUID, apiKeyHash: string, db: ClientOrTransaction = prisma){
         await db.cj_apis.update({
             data: { api_key: apiKeyHash },
+            where: { id }
+        });
+    }
+
+    static async updateStatusById(id: UUID, active: boolean, db: ClientOrTransaction = prisma){
+        await db.cj_apis.update({
+            data: { ativa: active },
+            where: { id }
+        });
+    }
+
+    static async deleteByIdAndUserId(id: UUID, userId: UUID, db: ClientOrTransaction = prisma){
+        await db.cj_apis.delete({
             where: { id, usuario_id: userId }
-        })
+        });
+    }
+
+    static async countActivesByUserId(userId: UUID, db: ClientOrTransaction = prisma){
+        const result = await db.cj_apis.count({
+            where: {usuario_id: userId, ativa: true}
+        });
+        return result;
     }
 
     static async findManyByUserId(userId: UUID, db: ClientOrTransaction = prisma){
@@ -32,9 +52,11 @@ class CjapiModel {
                 data_criacao: true,
                 data_atualizacao: true,
                 data_desativacao: true,
-                ultimo_uso: true
+                ultimo_uso: true,
+                _count: { select: { produtos: true } }
             },
-            where: {usuario_id: userId}
+            where: {usuario_id: userId},
+            orderBy: {ativa: 'desc'}
         });
         return result;
     }
@@ -46,7 +68,8 @@ class CjapiModel {
                 data_criacao: true,
                 data_atualizacao: true,
                 data_desativacao: true,
-                ultimo_uso: true
+                ultimo_uso: true,
+                _count: { select: { produtos: true } }
             },
             where: {
                 id, usuario_id: userId

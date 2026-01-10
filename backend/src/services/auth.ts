@@ -10,7 +10,7 @@ import { SESSION_MS_WITH_REMEMBER, SESSION_MS_WITHOUT_REMEMBER } from "@utils/co
 
 class AuthService {
 
-    static async login(email: string, password: string, remembreMe: boolean, userAgent: string, oldSessionId?: UUID){
+    static async login(email: string, password: string, remembreMe: boolean, userAgent: string, visitorId: string, ip: string, oldSessionId?: UUID){
 
         const newSession = await prisma.$transaction(async (tx)=>{
             const user = await UserModel.findLoginInfoByEmail(email, tx);
@@ -23,8 +23,8 @@ class AuthService {
             const accessToken = CookieUtils.generateAccessToken(userId, name, email, token_version);
             const refreshToken = CookieUtils.generateRefreshToken();
             const newSessionId = CookieUtils.generateSessionId();
-            const deviceName = DeviceUtils.getDeviceName(userAgent);
-            const deviceHash = DeviceUtils.createDeviceHash(userAgent);
+            const deviceName = DeviceUtils.getDeviceName(userAgent, ip);
+            const deviceHash = DeviceUtils.createDeviceHash(visitorId);
             const expiresIn = remembreMe ?
                 new Date(Date.now() + SESSION_MS_WITH_REMEMBER) :
                 new Date(Date.now() + SESSION_MS_WITHOUT_REMEMBER);

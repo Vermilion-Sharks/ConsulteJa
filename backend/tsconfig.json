@@ -23,7 +23,8 @@
       "@services/*": ["services/*"],
       "@tasks/*": ["tasks/*"],
       "@utils/*": ["utils/*"],
-      "@schemas/*": ["schemas/*"]
+      "@schemas/*": ["schemas/*"],
+      "@validators/*": ["validators/*"]
     },
     "noEmit": false,
     "allowSyntheticDefaultImports": true,

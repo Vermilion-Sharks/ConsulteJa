@@ -17,6 +17,7 @@ const corsConfig: CorsOptions = {
     allowedHeaders: [
         'Content-Type',
         'Authorization',
+        'X-Fingerprint-VisitorId'
     ],
     exposedHeaders: ['Content-Disposition'],
     credentials: true,

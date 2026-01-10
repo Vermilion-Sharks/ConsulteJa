@@ -1,3 +1,12 @@
+import countries from "i18n-iso-countries";
+
+import pt from "i18n-iso-countries/langs/pt.json";
+countries.registerLocale(pt);
+
+// * Habilitar o inglês só se for usar
+// import en from "i18n-iso-countries/langs/en.json";
+// countries.registerLocale(en);
+
 class FormatUtils {
 
     static getMilisecondsByText(text: string){
@@ -14,6 +23,10 @@ class FormatUtils {
             else if(lastCharacter==='s') conversion = 1000;
             return numericString * conversion;
         }
+    }
+
+    static countryAcronymToName(acronym: string, lang: 'pt'){
+        return countries.getName(acronym, lang);
     }
 
 }

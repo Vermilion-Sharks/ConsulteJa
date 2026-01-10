@@ -13,13 +13,14 @@ class AuthController {
     static async login(req: RequestCustomVS, res: Response, next: NextFunction){
         try {
             const data = loginSchema.parse(req.body);
-            const { email, password, rememberMe } = data;
+            const { email, password, rememberMe, visitorId } = data;
             
             const remember = !!rememberMe;
             const userAgent = req.headers['user-agent'] ?? '';
             const oldSessionId = req.cookies.sessionId;
+            const ip = req.ip ?? '0.0.0.0';
 
-            const newSession = await AuthService.login(email, password, remember, userAgent, oldSessionId);
+            const newSession = await AuthService.login(email, password, remember, userAgent, visitorId, ip, oldSessionId);
             const { accessToken, refreshToken, newSessionId } = newSession;
 
             CookieUtils.saveCookieAccessToken(res, accessToken, remember);

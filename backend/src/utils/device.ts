@@ -1,35 +1,25 @@
 import { createHash } from 'node:crypto';
+import { UAParser } from 'ua-parser-js';
+import geoip from 'geoip-country';
+import FormatUtils from './format';
 
 class DeviceUtils {
 
-    static getOS(userAgent: string){
-        if (/windows nt/i.test(userAgent)) return 'Windows';
-        if (/mac os x/i.test(userAgent)) return 'Mac';
-        if (/android/i.test(userAgent)) return 'Android';
-        if (/iphone/i.test(userAgent)) return 'iPhone';
-        if (/ipad/i.test(userAgent)) return 'iPad';
-        if (/linux/i.test(userAgent)) return 'Linux';
+    static getDeviceName(userAgent: string, ip: string){
+        const { browser, os } = UAParser(userAgent);
+        const browserName = browser.name ?? 'Navegador desconhecido';
+        const osName = os.name ?? 'SO desconhecido';
+        const osVersion = os.version ? ` ${os.version}` : '';
 
-        return 'SO desconhecido';
+        const geoipInfo = geoip.lookup(ip);
+        const acronym = geoipInfo?.country ?? '';
+        const country = FormatUtils.countryAcronymToName(acronym, 'pt') ?? 'País não identificado';
+
+        return `${browserName} no ${osName}${osVersion}, ${country}`;
     }
 
-    static getBrowser(userAgent: string){
-        if (/edg/i.test(userAgent)) return 'Edge';
-        if (/chrome/i.test(userAgent)) return 'Chrome';
-        if (/firefox/i.test(userAgent)) return 'Firefox';
-        if (/safari/i.test(userAgent) && !/chrome/i.test(userAgent)) return 'Safari';
-
-        return 'Navegador desconhecido';
-    }
-
-    static getDeviceName(userAgent: string){
-        const so = DeviceUtils.getOS(userAgent);
-        const browser = DeviceUtils.getBrowser(userAgent);
-        return `${browser} no ${so}`;
-    }
-
-    static createDeviceHash(userAgent: string){
-        return createHash('sha256').update(userAgent).digest('hex');
+    static createDeviceHash(visitorId: string){
+        return createHash('sha256').update(visitorId).digest('hex');
     }
 
 }

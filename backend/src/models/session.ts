@@ -35,20 +35,19 @@ class SessionModel {
         });
     }
 
-    static async findValidInfo(userId: UUID, sessionId: UUID, tokenHash: string, deviceHash: string, db: ClientOrTransaction = prisma){
+    static async findInfoByUserAndSessionId(userId: UUID, sessionId: UUID, db: ClientOrTransaction = prisma){
         const now = new Date();
         const result = await db.sessions.findFirst({
             where: {
-                token: tokenHash,
                 session_id: sessionId,
                 user_id: userId,
-                device_hash: deviceHash,
                 expires_in: { gt: now }
             },
             select: {
                 remember_me: true,
                 device_hash: true,
                 device_name: true,
+                token: true,
                 users: {
                     select: {
                         id: true,
@@ -63,8 +62,12 @@ class SessionModel {
     }
 
     static async findManyByUserId(userId: UUID){
+        const now = new Date();
         const result = await prisma.sessions.findMany({
-            where: { user_id: userId },
+            where: {
+                user_id: userId,
+                expires_in: { gt: now }
+            },
             select: {
                 session_id: true,
                 remember_me: true,
