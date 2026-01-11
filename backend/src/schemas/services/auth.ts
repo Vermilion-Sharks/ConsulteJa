@@ -7,7 +7,6 @@ export interface LoginService {
     userAgent: string;
     visitorId: string;
     ip: string;
-    oldSessionId?: UUID
 }
 
 export interface CreateSessionDataService {
@@ -26,5 +25,4 @@ export interface GoogleLoginService {
     userAgent: string;
     visitorId: string;
     ip: string;
-    oldSessionId?: UUID
 }

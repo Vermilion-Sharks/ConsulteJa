@@ -14,7 +14,7 @@ class AuthService {
 
     static async login(data: LoginService){
 
-        const { email, password, rememberMe, oldSessionId } = data;
+        const { email, password } = data;
 
         const user = await UserModel.findLoginInfoByEmail(email);
 
@@ -29,19 +29,10 @@ class AuthService {
         const { id, name, token_version } = user;
         const userId = id as UUID;
 
-        const sessionData = AuthService.createSessionData({
+        const newSession = await  AuthService.createSessionData({
             ...data,
             id: userId, name,
             tokenVersion: token_version
-        });
-        const {
-            accessToken, deviceHash, deviceName, expiresIn, newSessionId, refreshToken, refreshTokenHash
-        } = sessionData;
-
-        const newSession = await prisma.$transaction(async (tx)=>{
-            if(oldSessionId) await SessionModel.deleteByUserAndSessionId(userId, oldSessionId, tx);
-            await SessionModel.create(userId, refreshTokenHash, newSessionId, rememberMe, deviceName, deviceHash, expiresIn, tx);
-            return {accessToken, refreshToken, newSessionId};
         });
 
         return newSession;
@@ -83,7 +74,7 @@ class AuthService {
 
     }
 
-    static createSessionData(data: CreateSessionDataService){
+    private static async createSessionData(data: CreateSessionDataService){
 
         const { id, ip, name, rememberMe, tokenVersion, userAgent, visitorId, email } = data;
 
@@ -97,15 +88,19 @@ class AuthService {
             new Date(Date.now() + SESSION_MS_WITHOUT_REMEMBER);
         const refreshTokenHash = createHash('sha256').update(refreshToken).digest('hex');
 
-        return {
-            accessToken, refreshToken, refreshTokenHash, newSessionId, deviceName, deviceHash, expiresIn
-        };
+        const newSession = await prisma.$transaction(async (tx)=>{
+            await SessionModel.deleteByUserIdAndDeviceHash(id, deviceHash, tx);
+            await SessionModel.create(id, refreshTokenHash, newSessionId, rememberMe, deviceName, deviceHash, expiresIn, tx);
+            return {accessToken, refreshToken, newSessionId};
+        });
+
+        return newSession;
 
     }
 
     static async googleLogin(data: GoogleLoginService){
 
-        const { idToken, oldSessionId } = data;
+        const { idToken } = data;
 
         const ticket = await googleClient.verifyIdToken({
             idToken, audience: GOOGLE_CLIENT_ID
@@ -139,22 +134,13 @@ class AuthService {
             userId = user.id as UUID;
         }
 
-        const sessionData = AuthService.createSessionData({
+        const newSession = await AuthService.createSessionData({
             ...data,
             email: googleEmail,
             id: userId,
             tokenVersion: userTokenVersion,
             name: userName,
             rememberMe: true
-        });
-        const {
-            accessToken, deviceHash, deviceName, expiresIn, newSessionId, refreshToken, refreshTokenHash
-        } = sessionData;
-
-        const newSession = await prisma.$transaction(async (tx)=>{
-            if(oldSessionId) await SessionModel.deleteByUserAndSessionId(userId, oldSessionId, tx);
-            await SessionModel.create(userId, refreshTokenHash, newSessionId, true, deviceName, deviceHash, expiresIn, tx);
-            return {accessToken, refreshToken, newSessionId};
         });
 
         return newSession;        

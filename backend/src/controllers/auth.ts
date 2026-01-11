@@ -16,12 +16,11 @@ class AuthController {
             
             const remember = !!data.rememberMe;
             const userAgent = req.headers['user-agent'] ?? '';
-            const oldSessionId = req.cookies.sessionId;
             const ip = req.ip ?? '0.0.0.0';
 
             const newSession = await AuthService.login({
                 ...data, rememberMe: remember,
-                userAgent, oldSessionId, ip
+                userAgent, ip
             });
             const { accessToken, refreshToken, newSessionId } = newSession;
 
@@ -94,12 +93,11 @@ class AuthController {
             const data = googleLoginSchema.parse(req.body);
 
             const userAgent = req.headers['user-agent'] ?? '';
-            const oldSessionId = req.cookies.sessionId;
             const ip = req.ip ?? '0.0.0.0';
 
             const newSession = await AuthService.googleLogin({
                 ...data,
-                userAgent, oldSessionId, ip
+                userAgent, ip
             })
             const { accessToken, refreshToken, newSessionId } = newSession;
 

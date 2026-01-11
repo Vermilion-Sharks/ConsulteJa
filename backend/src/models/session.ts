@@ -35,6 +35,15 @@ class SessionModel {
         });
     }
 
+    static async deleteByUserIdAndDeviceHash(userId: UUID, deviceHash: string, db: ClientOrTransaction = prisma){
+        await db.sessions.deleteMany({
+            where: {
+                user_id: userId,
+                device_hash: deviceHash
+            }
+        });
+    }
+
     static async findInfoByUserAndSessionId(userId: UUID, sessionId: UUID, db: ClientOrTransaction = prisma){
         const now = new Date();
         const result = await db.sessions.findFirst({
