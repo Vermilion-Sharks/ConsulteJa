@@ -2,7 +2,7 @@ import type { ErrorCustomVS } from '@schemas/shared/error';
 import type { RequestAuthVS, RequestCustomVS } from '@schemas/shared/request';
 import type { Response, NextFunction } from 'express';
 import type { UUID } from 'node:crypto';
-import { loginSchema } from '@schemas/controllers/auth';
+import { googleLoginSchema, loginSchema } from '@schemas/controllers/auth';
 import AuthService from '@services/auth';
 import CookieUtils from '@utils/cookies';
 import SessionModel from '@models/session';
@@ -13,14 +13,16 @@ class AuthController {
     static async login(req: RequestCustomVS, res: Response, next: NextFunction){
         try {
             const data = loginSchema.parse(req.body);
-            const { email, password, rememberMe, visitorId } = data;
             
-            const remember = !!rememberMe;
+            const remember = !!data.rememberMe;
             const userAgent = req.headers['user-agent'] ?? '';
             const oldSessionId = req.cookies.sessionId;
             const ip = req.ip ?? '0.0.0.0';
 
-            const newSession = await AuthService.login(email, password, remember, userAgent, visitorId, ip, oldSessionId);
+            const newSession = await AuthService.login({
+                ...data, rememberMe: remember,
+                userAgent, oldSessionId, ip
+            });
             const { accessToken, refreshToken, newSessionId } = newSession;
 
             CookieUtils.saveCookieAccessToken(res, accessToken, remember);
@@ -84,6 +86,30 @@ class AuthController {
         } catch (err) {
             const erro = err as ErrorCustomVS;
             next(erro);
+        }
+    }
+
+    static async googleLogin(req: RequestCustomVS, res: Response, next: NextFunction){
+        try {
+            const data = googleLoginSchema.parse(req.body);
+
+            const userAgent = req.headers['user-agent'] ?? '';
+            const oldSessionId = req.cookies.sessionId;
+            const ip = req.ip ?? '0.0.0.0';
+
+            const newSession = await AuthService.googleLogin({
+                ...data,
+                userAgent, oldSessionId, ip
+            })
+            const { accessToken, refreshToken, newSessionId } = newSession;
+
+            CookieUtils.saveCookieAccessToken(res, accessToken, true);
+            CookieUtils.saveCookieRefreshToken(res, refreshToken, true);
+            CookieUtils.saveCookieSessionId(res, newSessionId, true);
+
+            ResponseVS(res, {message: 'Logado com sucesso.'});
+        } catch (err) {
+            next(err);
         }
     }
 

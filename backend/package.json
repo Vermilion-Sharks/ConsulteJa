@@ -24,6 +24,7 @@
     "express": "^5.2.1",
     "express-rate-limit": "^8.2.1",
     "geoip-country": "^5.0.202512052343",
+    "google-auth-library": "^10.5.0",
     "i18n-iso-countries": "^7.14.0",
     "jsonwebtoken": "^9.0.3",
     "node-cron": "^4.2.1",

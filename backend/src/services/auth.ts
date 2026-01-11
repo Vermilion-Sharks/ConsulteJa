@@ -6,36 +6,43 @@ import Errors from '@utils/errorClasses';
 import Argon2Utils from "@utils/argon2";
 import CookieUtils from "@utils/cookies";
 import DeviceUtils from "@utils/device";
-import { SESSION_MS_WITH_REMEMBER, SESSION_MS_WITHOUT_REMEMBER } from "@utils/constants";
+import { GOOGLE_CLIENT_ID, SESSION_MS_WITH_REMEMBER, SESSION_MS_WITHOUT_REMEMBER } from "@utils/constants";
+import googleClient from "@configs/googleAuth";
+import { CreateSessionDataService, GoogleLoginService, LoginService } from "@schemas/services/auth";
 
 class AuthService {
 
-    static async login(email: string, password: string, remembreMe: boolean, userAgent: string, visitorId: string, ip: string, oldSessionId?: UUID){
+    static async login(data: LoginService){
+
+        const { email, password, rememberMe, oldSessionId } = data;
+
+        const user = await UserModel.findLoginInfoByEmail(email);
+
+        if(user){
+            if(!user.password)
+                throw new Errors.ValidationError('Esta conta utiliza login com Google. Crie uma senha ou entre com o Google.');
+            const passwordValid = await Argon2Utils.validatePassword(user.password, password);
+            if(!passwordValid)
+                throw new Errors.InvalidCredentialsError('Credenciais inválidas.');
+        } else throw new Errors.InvalidCredentialsError('Credenciais inválidas.');
+
+        const { id, name, token_version } = user;
+        const userId = id as UUID;
+
+        const sessionData = AuthService.createSessionData({
+            ...data,
+            id: userId, name,
+            tokenVersion: token_version
+        });
+        const {
+            accessToken, deviceHash, deviceName, expiresIn, newSessionId, refreshToken, refreshTokenHash
+        } = sessionData;
 
         const newSession = await prisma.$transaction(async (tx)=>{
-            const user = await UserModel.findLoginInfoByEmail(email, tx);
-
-            if(!user || !await Argon2Utils.validatePassword(user.password, password))
-                throw new Errors.InvalidCredentialsError('Credenciais inválidas.');
-
-            const { id, name, token_version } = user;
-            const userId = id as UUID;
-            const accessToken = CookieUtils.generateAccessToken(userId, name, email, token_version);
-            const refreshToken = CookieUtils.generateRefreshToken();
-            const newSessionId = CookieUtils.generateSessionId();
-            const deviceName = DeviceUtils.getDeviceName(userAgent, ip);
-            const deviceHash = DeviceUtils.createDeviceHash(visitorId);
-            const expiresIn = remembreMe ?
-                new Date(Date.now() + SESSION_MS_WITH_REMEMBER) :
-                new Date(Date.now() + SESSION_MS_WITHOUT_REMEMBER);
-
-            const tokenHash = createHash('sha256').update(refreshToken).digest('hex');
-
             if(oldSessionId) await SessionModel.deleteByUserAndSessionId(userId, oldSessionId, tx);
-            await SessionModel.create(userId, tokenHash, newSessionId, remembreMe, deviceName, deviceHash, expiresIn, tx);
-
+            await SessionModel.create(userId, refreshTokenHash, newSessionId, rememberMe, deviceName, deviceHash, expiresIn, tx);
             return {accessToken, refreshToken, newSessionId};
-        })
+        });
 
         return newSession;
 
@@ -62,17 +69,95 @@ class AuthService {
 
     }
 
-    static async refreshSession(newRefreshToken: string, userId: UUID, remembreMe: boolean, deviceName: string, deviceHash: string, newSessionId: UUID, oldSessionId: UUID){
+    static async refreshSession(newRefreshToken: string, userId: UUID, rememberMe: boolean, deviceName: string, deviceHash: string, newSessionId: UUID, oldSessionId: UUID){
 
-        const expiresIn = remembreMe ?
+        const expiresIn = rememberMe ?
             new Date(Date.now() + SESSION_MS_WITH_REMEMBER) :
             new Date(Date.now() + SESSION_MS_WITHOUT_REMEMBER);
         const tokenHash = createHash('sha256').update(newRefreshToken).digest('hex');
 
         await prisma.$transaction(async (tx)=>{
             await SessionModel.deleteByUserAndSessionId(userId, oldSessionId, tx);
-            await SessionModel.create(userId, tokenHash, newSessionId, remembreMe, deviceName, deviceHash, expiresIn, tx);
+            await SessionModel.create(userId, tokenHash, newSessionId, rememberMe, deviceName, deviceHash, expiresIn, tx);
         });
+
+    }
+
+    static createSessionData(data: CreateSessionDataService){
+
+        const { id, ip, name, rememberMe, tokenVersion, userAgent, visitorId, email } = data;
+
+        const accessToken = CookieUtils.generateAccessToken(id, name, email, tokenVersion);
+        const refreshToken = CookieUtils.generateRefreshToken();
+        const newSessionId = CookieUtils.generateSessionId();
+        const deviceName = DeviceUtils.getDeviceName(userAgent, ip);
+        const deviceHash = DeviceUtils.createDeviceHash(visitorId);
+        const expiresIn = rememberMe ?
+            new Date(Date.now() + SESSION_MS_WITH_REMEMBER) :
+            new Date(Date.now() + SESSION_MS_WITHOUT_REMEMBER);
+        const refreshTokenHash = createHash('sha256').update(refreshToken).digest('hex');
+
+        return {
+            accessToken, refreshToken, refreshTokenHash, newSessionId, deviceName, deviceHash, expiresIn
+        };
+
+    }
+
+    static async googleLogin(data: GoogleLoginService){
+
+        const { idToken, oldSessionId } = data;
+
+        const ticket = await googleClient.verifyIdToken({
+            idToken, audience: GOOGLE_CLIENT_ID
+        });
+
+        const payload = ticket.getPayload();
+        if(!payload)
+            throw new Errors.InvalidCredentialsError('ID Token do Google inválido.');
+
+        const googleId = payload.sub;
+        const googleEmail = payload.email!;
+        const googleName = payload.name!;
+
+        let userTokenVersion: number;
+        let userId: UUID;
+        let userName = googleName;
+
+        const user = await UserModel.findByGoogleId(googleId);
+        if(!user){
+            const userUpsert = await UserModel.upsertGoogleUser({
+                email: googleEmail,
+                name: googleName,
+                googleId
+            });
+            userName = userUpsert.name;
+            userTokenVersion = userUpsert.token_version;
+            userId = userUpsert.id as UUID;
+        } else{
+            userName = user.name;
+            userTokenVersion = user.token_version;
+            userId = user.id as UUID;
+        }
+
+        const sessionData = AuthService.createSessionData({
+            ...data,
+            email: googleEmail,
+            id: userId,
+            tokenVersion: userTokenVersion,
+            name: userName,
+            rememberMe: true
+        });
+        const {
+            accessToken, deviceHash, deviceName, expiresIn, newSessionId, refreshToken, refreshTokenHash
+        } = sessionData;
+
+        const newSession = await prisma.$transaction(async (tx)=>{
+            if(oldSessionId) await SessionModel.deleteByUserAndSessionId(userId, oldSessionId, tx);
+            await SessionModel.create(userId, refreshTokenHash, newSessionId, true, deviceName, deviceHash, expiresIn, tx);
+            return {accessToken, refreshToken, newSessionId};
+        });
+
+        return newSession;        
 
     }
 

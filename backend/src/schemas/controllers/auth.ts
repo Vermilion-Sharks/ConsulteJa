@@ -9,4 +9,7 @@ export const loginSchema = z.strictObject({
     visitorId: stringSchema
 });
 
-export type LoginData = z.infer<typeof loginSchema>;
+export const googleLoginSchema = z.strictObject({
+    idToken: stringSchema,
+    visitorId: stringSchema
+});

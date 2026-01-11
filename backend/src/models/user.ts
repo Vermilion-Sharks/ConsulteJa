@@ -1,6 +1,7 @@
 import prisma from "@configs/db";
 import type { UUID } from "node:crypto";
 import { ClientOrTransaction } from "@schemas/shared/prisma";
+import { UpsertGoogleUserData } from "@schemas/models/user";
 
 class UserModel {
 
@@ -19,6 +20,21 @@ class UserModel {
             },
             where: {id}
         })
+    }
+
+    static async upsertGoogleUser(user: UpsertGoogleUserData, db: ClientOrTransaction = prisma){
+        const { googleId, email, name } = user;
+        const result = await db.users.upsert({
+            select: {
+                id: true,
+                name: true,
+                token_version: true
+            },
+            update: { googleId },
+            create: { googleId, email, name },
+            where: { email }
+        });
+        return result;
     }
 
     static async findLoginInfoByEmail(email: string, db: ClientOrTransaction = prisma){
@@ -40,6 +56,18 @@ class UserModel {
             select: { token_version: true }
         });
         return result?.token_version;
+    }
+
+    static async findByGoogleId(googleId: string, db: ClientOrTransaction = prisma){
+        const result = await db.users.findUnique({
+            select: {
+                id: true,
+                email: true,
+                name: true,
+                token_version: true
+            }, where: {googleId}
+        });
+        return result;
     }
 
 }
