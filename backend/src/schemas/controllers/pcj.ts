@@ -23,13 +23,12 @@ export const getInfoQueryDTO = z.strictObject({
     ordnome: ordemProdutosSchema.optional(),
     ordmarca: ordemProdutosSchema.optional(),
     ordpreco: ordemProdutosSchema.optional(),
-    marca: stringSchema.max(70, 'A marca só pode ter no máximo 70 caracteres.').optional(),
     precomax: precoProdutosSchema.optional(),
     precomin: precoProdutosSchema.optional(),
     preco: precoProdutosSchema.optional()
 }).transform(info=>{
     const {
-        ordcodigo, ordmarca, ordnome, ordpreco, pagina, qtdporpgn , todos, marca, preco, precomax, precomin
+        ordcodigo, ordmarca, ordnome, ordpreco, pagina, qtdporpgn , todos, preco, precomax, precomin
     } = info;
     return {
         skip: todos?undefined:((pagina??1)-1)*(qtdporpgn??9),
@@ -41,7 +40,6 @@ export const getInfoQueryDTO = z.strictObject({
             preco: ordpreco
         },
         where: {
-            marca,
             preco,
             ...(precomax || precomin ? {
                 AND: [

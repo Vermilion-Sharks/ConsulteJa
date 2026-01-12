@@ -1,8 +1,8 @@
 import prisma from "@configs/db";
 import { GetInfoDTOOutput } from "@schemas/controllers/pcj";
-import { ProdutoModelCreateData } from "@schemas/models/produto";
+import { ProdutoModelCreateData, ProdutoModelUpdateFields } from "@schemas/models/produto";
 import { ClientOrTransaction } from "@schemas/shared/prisma";
-import { produtosFindManyArgs } from "generated/prisma/models";
+import { produtosFindManyArgs, produtosUpdateInput } from "generated/prisma/models";
 import { type UUID } from "node:crypto";
 
 class ProdutoModel {
@@ -13,6 +13,13 @@ class ProdutoModel {
                 cj_api_id: cjapiId,
                 ...data
             }
+        })
+    }
+
+    static async updateFieldsById(id: UUID, cjapiId: UUID, fields: ProdutoModelUpdateFields, db: ClientOrTransaction = prisma){
+        await prisma.produtos.update({
+            data: fields,
+            where: { id, cj_api_id: cjapiId }
         })
     }
 
@@ -82,7 +89,8 @@ class ProdutoModel {
                 ...query.where,
                 cj_api_id: cjapiId
             }
-        })
+        });
+        return result;
     }
 
 }

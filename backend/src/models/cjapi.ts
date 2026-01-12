@@ -26,7 +26,17 @@ class CjapiModel {
 
     static async updateStatusById(id: UUID, active: boolean, db: ClientOrTransaction = prisma){
         await db.cj_apis.update({
-            data: { ativa: active },
+            data: { 
+                ativa: active,
+                ...(active?{data_desativacao: null}:{})
+            },
+            where: { id }
+        });
+    }
+
+    static async updateUltimoUsoById(id: UUID, db: ClientOrTransaction = prisma){
+        await db.cj_apis.update({
+            data: { ultimo_uso: new Date() },
             where: { id }
         });
     }

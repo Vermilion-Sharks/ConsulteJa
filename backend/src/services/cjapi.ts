@@ -4,7 +4,7 @@ import Errors from '@utils/errorClasses';
 import ApiKeyUtils from "@utils/apiKey";
 import prisma from "@configs/db";
 import ProdutoModel from "@models/produto";
-import { ProdutoModelCreateData } from "@schemas/models/produto";
+import { ProdutoModelCreateData, ProdutoModelUpdateFields } from "@schemas/models/produto";
 import CjapiValidator from "@validators/cjapi";
 
 class CjapiService {
@@ -99,6 +99,15 @@ class CjapiService {
         if(!product)
             throw new Errors.NotFoundError('Produto não encontrado na API fornecida.');
         return product;
+
+    }
+
+    static async editProduct(productId: UUID, cjapiId: UUID, userId: UUID, fields: ProdutoModelUpdateFields){
+
+        await prisma.$transaction(async(tx)=>{
+            await CjapiValidator.canManageProducts(cjapiId, userId, tx);
+            await ProdutoModel.updateFieldsById(productId, cjapiId, fields, tx);
+        });
 
     }
 

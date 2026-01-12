@@ -7,3 +7,12 @@ export interface ProdutoModelCreateData {
     imagem?: string | null;
     importado?: boolean;
 }
+
+export interface ProdutoModelUpdateFields {
+    codigo?: string;
+    nome?: string;
+    marca?: string;
+    descricao?: string;
+    preco?: string;
+    imagem?: string;
+}

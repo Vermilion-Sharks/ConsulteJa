@@ -1,4 +1,4 @@
-import { getInfoDTO } from "@schemas/controllers/pcj";
+import { getInfoQueryDTO } from "@schemas/controllers/pcj";
 import { RequestAuthCjApi } from "@schemas/shared/request";
 import PcjService from "@services/pcj";
 import { ResponseVS } from "@utils/response";
@@ -10,7 +10,10 @@ class PcjController {
         try {
             const cjApiId = req.cjApiId;
             const apiInfo = await PcjService.getInfo(cjApiId);
-            ResponseVS(res, { data: apiInfo });
+            ResponseVS(res, {
+                data: apiInfo,
+                message: 'Para mais informações da sua API entre no site da ConsulteJa com a conta dona dessa API: http://localhost:2923.'
+            });
         } catch (err) {
             next(err);
         }
@@ -19,7 +22,9 @@ class PcjController {
     static async getProducts(req: RequestAuthCjApi, res: Response, next: NextFunction){
         try {
             const cjApiId = req.cjApiId;
-            const queryParams = getInfoDTO.parse(req.query);
+            const queryParams = getInfoQueryDTO.parse(req.query);
+            const products = await PcjService.getProducts(cjApiId, queryParams);
+            ResponseVS(res, { data: products });
         } catch (err) {
             next(err);
         }

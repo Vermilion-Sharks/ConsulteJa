@@ -1,4 +1,4 @@
-import { addProductSchema, findProductsQuerySchema, updateApiStatusSchema } from '@schemas/controllers/cjapi';
+import { addProductSchema, editProductSchema, findProductsQuerySchema, updateApiStatusSchema } from '@schemas/controllers/cjapi';
 import { uuidSchema } from '@schemas/shared/basics';
 import { ErrorCustomVS } from '@schemas/shared/error';
 import { RequestAuthVS } from '@schemas/shared/request';
@@ -120,6 +120,21 @@ class CjapiController {
             ResponseVS(res, {data: product});
         } catch (err) {
             const erro = err as ErrorCustomVS;
+            next(erro);
+        }
+    }
+
+    static async editProduct(req: RequestAuthVS, res: Response, next: NextFunction){
+        try {
+            const { id: userId } = req.user;
+            const cjapiId = uuidSchema.parse(req.params.cjapiId) as UUID;
+            const productId = uuidSchema.parse(req.params.productId) as UUID;
+            const fields = editProductSchema.parse(req.body);
+            await CjapiService.editProduct(productId, cjapiId, userId, fields);
+            ResponseVS(res, {message: 'Produto editado com sucesso.'});
+        } catch (err) {
+            const erro = err as ErrorCustomVS;
+            if(erro.code==='P2025') erro.custom_message = 'Produto não encontrado na API fornecida.';
             next(erro);
         }
     }

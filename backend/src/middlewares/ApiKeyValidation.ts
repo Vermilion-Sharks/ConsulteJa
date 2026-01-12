@@ -22,6 +22,8 @@ export async function ApiKeyValidation(req: RequestCjApi, res: Response, next: N
         if(!isApiKeyValid)
             return next(new Errors.InvalidCredentialsError('API key fornecida inválida.'));
 
+        await CjapiModel.updateUltimoUsoById(cjApiId);
+
         req.cjApiId = cjApiId;
         next();
     } catch (err) {

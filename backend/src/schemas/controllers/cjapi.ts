@@ -46,6 +46,15 @@ export const updateApiStatusSchema = z.strictObject({
     active: booleanSchema
 });
 
-export const findProductsQuerySchema = z.object({
+export const findProductsQuerySchema = z.strictObject({
     page: stringSchema.transform(Number).optional()
 });
+
+export const editProductSchema = z.strictObject({
+    codigo: productCodeSchema.optional(),
+    nome: productNomeSchema.optional(),
+    marca: productMarcaSchema.optional(),
+    descricao: productDescricaoSchema.optional(),
+    preco: productPrecoSchema.optional(),
+    imagem: urlSchema.optional()
+})

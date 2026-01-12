@@ -12,6 +12,7 @@ router.post('/cjapi/:cjapiId/apikey', VSAuth, CjapiController.genApiKey as Reque
 router.post('/cjapi/:cjapiId/status', VSAuth, CjapiController.updateStatus as RequestHandler);
 router.post('/cjapi/:cjapiId/product', VSAuth, CjapiController.addProduct as RequestHandler);
 router.get('/cjapi/:cjapiId/product', VSAuth, CjapiController.findProducts as RequestHandler);
+router.post('/cjapi/:cjapiId/product/:productId', VSAuth, CjapiController.editProduct as RequestHandler);
 router.get('/cjapi/:cjapiId/product/:productId', VSAuth, CjapiController.findSingleProduct as RequestHandler);
 router.delete('/cjapi/:cjapiId/product/:productId', VSAuth, CjapiController.deleteSingleProduct as RequestHandler);
 

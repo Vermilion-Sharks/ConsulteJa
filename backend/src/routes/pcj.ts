@@ -5,6 +5,7 @@ import express, { type RequestHandler } from 'express';
 const router = express.Router();
 
 router.get('/pcj/:cjApiId', ApiKeyValidation, PcjController.getInfo as RequestHandler);
-router.get('/pxj/:cjApiId/produtos', ApiKeyValidation);
+router.get('/pcj/:cjApiId/produtos', ApiKeyValidation, PcjController.getProducts as RequestHandler);
+
 
 export default router;
