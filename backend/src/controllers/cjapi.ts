@@ -1,4 +1,3 @@
-import CjapiModel from '@models/cjapi';
 import { addProductSchema, findProductsQuerySchema, updateApiStatusSchema } from '@schemas/controllers/cjapi';
 import { uuidSchema } from '@schemas/shared/basics';
 import { ErrorCustomVS } from '@schemas/shared/error';

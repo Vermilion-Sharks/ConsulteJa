@@ -78,6 +78,31 @@ class CjapiModel {
         return result;
     }
 
+    static async findApiKeyById(id: UUID, db: ClientOrTransaction = prisma){
+        const result = await db.cj_apis.findUnique({
+            select: {
+                api_key: true
+            },
+            where: { id, ativa: true }
+        });
+        return result?.api_key;
+    }
+
+    static async findActiveById(id: UUID, db: ClientOrTransaction = prisma){
+        const result = await db.cj_apis.findUnique({
+            select: {
+                ativa: true,
+                data_criacao: true,
+                data_atualizacao: true,
+                data_desativacao: true,
+                ultimo_uso: true,
+                _count: { select: { produtos: true } }
+            },
+            where: {id, ativa: true}
+        });
+        return result;
+    }
+
 }
 
 export default CjapiModel;

@@ -1,6 +1,7 @@
 import type { Request } from 'express';
 import type { AccessTokenPayload, SessionId } from './cookies';
 import { IncomingHttpHeaders } from 'node:http';
+import type { UUID } from 'node:crypto';
 
 export interface RequestCustomVS extends Request {
     cookies: {
@@ -24,4 +25,12 @@ export interface RequestAuthVS extends Request {
     headers: IncomingHttpHeaders & {
         'x-fingerprint-visitorid'?: string;
     };
+}
+
+export interface RequestCjApi extends Request {
+    cjApiId?: UUID
+}
+
+export interface RequestAuthCjApi extends Request {
+    cjApiId: UUID
 }

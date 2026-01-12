@@ -28,7 +28,6 @@ const productDescricaoSchema = stringSchema
 
 const productPrecoSchema = numberSchema
     .positive('O preço do produto deve ser positivo.')
-    .transform(prec=>prec.toFixed(2));
 
 export const addProductSchema = z.strictObject({
     codigo: productCodeSchema,

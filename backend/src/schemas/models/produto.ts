@@ -3,7 +3,7 @@ export interface ProdutoModelCreateData {
     nome: string;
     marca: string;
     descricao: string;
-    preco: string;
+    preco: number;
     imagem?: string | null;
     importado?: boolean;
 }
