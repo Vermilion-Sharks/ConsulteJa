@@ -1,7 +1,7 @@
-import { booleanSchema, numberSchema, stringSchema, urlSchema } from '@schemas/shared/basics';
+import { booleanSchema, stringSchema, urlSchema } from '@schemas/shared/basics';
 import z from 'zod';
 
-const productCodeSchema = 
+export const productCodeSchema = 
     stringSchema
     .length(13, 'O código do produto deve ter exatamente 13 números.')
     .regex(/^\d+$/, 'O código do produto só pode conter números.')
@@ -16,20 +16,20 @@ const productCodeSchema =
         return (10-rest12)%10 === Number(code.at(-1));
     },'Código do produto inválido (dígito verificador incorreto).');
 
-const productNomeSchema = stringSchema
+export const productNomeSchema = stringSchema
     .min(1, 'O nome do produto deve ter pelo menos 1 carctere.')
     .max(100, 'O nome do produto deve no ter máximo 100 caracteres.');
 
-const productMarcaSchema = stringSchema
+export const productMarcaSchema = stringSchema
     .max(70, 'A marca do produto deve no ter máximo 70 caracteres.');
 
-const productDescricaoSchema = stringSchema
+export const productDescricaoSchema = stringSchema
     .max(300, 'A descrição do produto deve no ter máximo 300 caracteres.');
 
-const productPrecoSchema = stringSchema
+export const productPrecoSchema = stringSchema
     .regex(
         /^\d+(\.\d{1,2})?$/,
-        'Preço deve estar no formato "0.00".'
+        "Preço deve estar no formato '0.00'."
     );
 
 export const addProductSchema = z.strictObject({

@@ -1,4 +1,8 @@
 -- CreateTable
+
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+CREATE EXTENSION IF NOT EXISTS unaccent;
+
 CREATE TABLE "cj_apis" (
     "id" UUID NOT NULL DEFAULT gen_random_uuid(),
     "api_key" VARCHAR(64) NOT NULL,

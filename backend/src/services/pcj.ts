@@ -1,7 +1,7 @@
 import CjapiModel from "@models/cjapi";
 import type { UUID } from "node:crypto";
 import Errors from '@utils/errorClasses';
-import { GetInfoDTOOutput } from "@schemas/controllers/pcj";
+import { ReqQueryPcjDTOOutput } from "@schemas/controllers/pcj";
 import ProdutoModel from "@models/produto";
 
 class PcjService {
@@ -17,9 +17,22 @@ class PcjService {
 
     }
 
-    static async getProducts(cjapiId: UUID, queryDTO: GetInfoDTOOutput){
+    static async getProducts(cjapiId: UUID, queryDTO: ReqQueryPcjDTOOutput){
 
-        const products = await ProdutoModel.findManyByCjapiIdAndCustomQery(cjapiId, queryDTO);
+        const products = await ProdutoModel.findManyByCjapiIdAndCustomQuery(cjapiId, queryDTO);
+
+        const productsF = products.map(prod=>({
+            ...prod,
+            precoF: `R$${prod.preco.toFixed(2).replace('.',',')}`
+        }))
+
+        return productsF;
+
+    }
+
+    static async getProductsByMarca(cjapiId: UUID, marca: string, queryDTO: ReqQueryPcjDTOOutput){
+
+        const products = await ProdutoModel.findManyByCjapiIdMarcaAndQuery(cjapiId, marca, queryDTO);
 
         const productsF = products.map(prod=>({
             ...prod,

@@ -6,6 +6,7 @@ const router = express.Router();
 
 router.get('/pcj/:cjApiId', ApiKeyValidation, PcjController.getInfo as RequestHandler);
 router.get('/pcj/:cjApiId/produtos', ApiKeyValidation, PcjController.getProducts as RequestHandler);
+router.get('/pcj/:cjApiId/produtos/marca/:marca', ApiKeyValidation, PcjController.getProductsByMarca as RequestHandler);
 
 
 export default router;

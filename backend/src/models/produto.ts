@@ -1,8 +1,7 @@
 import prisma from "@configs/db";
-import { GetInfoDTOOutput } from "@schemas/controllers/pcj";
+import { ReqQueryPcjDTOOutput } from "@schemas/controllers/pcj";
 import { ProdutoModelCreateData, ProdutoModelUpdateFields } from "@schemas/models/produto";
 import { ClientOrTransaction } from "@schemas/shared/prisma";
-import { produtosFindManyArgs, produtosUpdateInput } from "generated/prisma/models";
 import { type UUID } from "node:crypto";
 
 class ProdutoModel {
@@ -17,7 +16,7 @@ class ProdutoModel {
     }
 
     static async updateFieldsById(id: UUID, cjapiId: UUID, fields: ProdutoModelUpdateFields, db: ClientOrTransaction = prisma){
-        await prisma.produtos.update({
+        await db.produtos.update({
             data: fields,
             where: { id, cj_api_id: cjapiId }
         })
@@ -70,9 +69,13 @@ class ProdutoModel {
         return result;
     }
 
-    static async findManyByCjapiIdAndCustomQery(cjapiId: UUID, query: GetInfoDTOOutput, db: ClientOrTransaction = prisma){
+    static async findManyByCjapiIdAndCustomQuery(cjapiId: UUID, query: ReqQueryPcjDTOOutput, db: ClientOrTransaction = prisma){
         const result = await db.produtos.findMany({
             ...query,
+            orderBy: [
+                ...query.orderBy,
+                {data_criacao: 'desc'}
+            ],
             select: {
                 id: true,
                 codigo: true,
@@ -90,6 +93,43 @@ class ProdutoModel {
                 cj_api_id: cjapiId
             }
         });
+        return result;
+    }
+
+    static async findManyByCjapiIdMarcaAndQuery(cjapiId: UUID, marca: string, query: ReqQueryPcjDTOOutput, db: ClientOrTransaction = prisma){
+        const productsWithMarca: {id: string}[] = await db.$queryRaw`
+            select id from produtos where cj_api_id = ${cjapiId}
+            and unaccent(lower(marca)) LIKE unaccent(lower(${`%${marca}%`}))
+        `;
+        const productsIds = productsWithMarca.map(p=>p.id);
+
+        const result = await db.produtos.findMany({
+            ...query,
+            orderBy: [
+                ...query.orderBy,
+                {data_criacao: 'desc'}
+            ],
+            select: {
+                id: true,
+                codigo: true,
+                data_atualizacao: true,
+                data_criacao: true,
+                descricao: true,
+                imagem: true,
+                importado: true,
+                marca: true,
+                nome: true,
+                preco: true
+            },
+            where: {
+                ...query.where,
+                id: {
+                    in: productsIds
+                },
+                cj_api_id: cjapiId
+            }
+        });
+
         return result;
     }
 
