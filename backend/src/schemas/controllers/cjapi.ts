@@ -26,8 +26,11 @@ const productMarcaSchema = stringSchema
 const productDescricaoSchema = stringSchema
     .max(300, 'A descrição do produto deve no ter máximo 300 caracteres.');
 
-const productPrecoSchema = numberSchema
-    .positive('O preço do produto deve ser positivo.')
+const productPrecoSchema = stringSchema
+    .regex(
+        /^\d+(\.\d{1,2})?$/,
+        'Preço deve estar no formato "0.00".'
+    );
 
 export const addProductSchema = z.strictObject({
     codigo: productCodeSchema,

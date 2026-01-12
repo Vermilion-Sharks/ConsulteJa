@@ -3,14 +3,19 @@ import z from "zod";
 
 const ordemProdutosSchema = z
     .enum(['>', '<', 'desc', 'asc'], 'A ordem deve ser ">", "<", "desc" ou "asc".')
-    .transform(ord=>ord==='>'||ord==='desc'?'desc':'asc');
+    .transform(
+        (ord): 'asc' | 'desc' =>
+        ord === '>' || ord === 'desc' ? 'desc' : 'asc'
+    );
 const paginaProdutosSchema = z.coerce.number('Deve ser um número inteiro.').int('Deve ser um número inteiro.');
 const qtdporpgnProdutosSchema = z.coerce.number('Deve ser um número inteiro.').int('Deve ser um número inteiro.');
-const precoProdutosSchema = z
-    .coerce.number('Deve ser um número válido.')
-    .positive('O preço do produto deve ser positivo.');
+const precoProdutosSchema = stringSchema
+    .regex(
+        /^\d+(\.\d{1,2})?$/,
+        'Preço deve estar no formato "0.00".'
+    );
 
-export const getInfoDTO = z.object({
+export const getInfoQueryDTO = z.strictObject({
     todos: stringSchema.transform(t=>t==='true').optional(),
     qtdporpgn: qtdporpgnProdutosSchema.optional(),
     pagina: paginaProdutosSchema.optional(),
@@ -56,4 +61,4 @@ export const getInfoDTO = z.object({
     }
 });
 
-export type GetInfoDTOOutput = z.output<typeof getInfoDTO>;
+export type GetInfoDTOOutput = z.output<typeof getInfoQueryDTO>;

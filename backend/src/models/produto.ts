@@ -1,6 +1,8 @@
 import prisma from "@configs/db";
+import { GetInfoDTOOutput } from "@schemas/controllers/pcj";
 import { ProdutoModelCreateData } from "@schemas/models/produto";
 import { ClientOrTransaction } from "@schemas/shared/prisma";
+import { produtosFindManyArgs } from "generated/prisma/models";
 import { type UUID } from "node:crypto";
 
 class ProdutoModel {
@@ -59,6 +61,28 @@ class ProdutoModel {
             where: { id, cj_api_id: cjapiId },
         });
         return result;
+    }
+
+    static async findManyByCjapiIdAndCustomQery(cjapiId: UUID, query: GetInfoDTOOutput, db: ClientOrTransaction = prisma){
+        const result = await db.produtos.findMany({
+            ...query,
+            select: {
+                id: true,
+                codigo: true,
+                data_atualizacao: true,
+                data_criacao: true,
+                descricao: true,
+                imagem: true,
+                importado: true,
+                marca: true,
+                nome: true,
+                preco: true
+            },
+            where: {
+                ...query.where,
+                cj_api_id: cjapiId
+            }
+        })
     }
 
 }
