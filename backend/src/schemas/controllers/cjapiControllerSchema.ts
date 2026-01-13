@@ -56,5 +56,5 @@ export const editProductSchema = z.strictObject({
     marca: productMarcaSchema.optional(),
     descricao: productDescricaoSchema.optional(),
     preco: productPrecoSchema.optional(),
-    imagem: urlSchema.optional()
+    imagem: urlSchema.nullable().optional()
 })
