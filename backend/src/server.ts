@@ -27,7 +27,7 @@ app.use(express.static(path.join(frontend, '/dist')));
 import '@tasks/cronSessionsCleanup';
 
 // * Importing Routes
-import routes from 'routers/index';
+import routes from '@routers/index';
 app.use(routes);
 
 app.get(/.*/, (req, res) => res.sendFile(path.join(frontend, '/dist/index.html')));
