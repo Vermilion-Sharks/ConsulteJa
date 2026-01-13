@@ -1,11 +1,11 @@
-import CjapiModel from "@models/cjapi";
+import CjapiModel from "@models/cjapiModel";
 import type { UUID } from "node:crypto";
 import Errors from '@utils/errorClasses';
 import ApiKeyUtils from "@utils/apiKey";
 import prisma from "@configs/db";
-import ProdutoModel from "@models/produto";
-import { ProdutoModelCreateData, ProdutoModelUpdateFields } from "@schemas/models/produto";
-import CjapiValidator from "@validators/cjapi";
+import ProdutoModel from "@models/produtoModel";
+import { ProdutoModelCreateData, ProdutoModelUpdateFields } from "@schemas/models/produtoModelSchema";
+import CjapiValidator from "@validators/cjapiValidator";
 
 class CjapiService {
 

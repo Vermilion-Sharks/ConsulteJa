@@ -1,5 +1,5 @@
-import { booleanSchema, stringSchema } from '@schemas/shared/basics';
-import { emailSchema } from '@schemas/shared/basics';
+import { booleanSchema, stringSchema } from '@schemas/shared/basicsSchema';
+import { emailSchema } from '@schemas/shared/basicsSchema';
 import z from 'zod';
 
 export const loginSchema = z.strictObject({

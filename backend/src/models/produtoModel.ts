@@ -1,7 +1,7 @@
 import prisma from "@configs/db";
-import { ReqQueryPcjDTOOutput } from "@schemas/controllers/pcj";
-import { ProdutoModelCreateData, ProdutoModelUpdateFields } from "@schemas/models/produto";
-import { ClientOrTransaction } from "@schemas/shared/prisma";
+import { ReqQueryPcjDTOOutput } from "@schemas/controllers/pcjControllerSchema";
+import { ProdutoModelCreateData, ProdutoModelUpdateFields } from "@schemas/models/produtoModelSchema";
+import { ClientOrTransaction } from "@schemas/shared/prismaSchema";
 import { type UUID } from "node:crypto";
 
 class ProdutoModel {

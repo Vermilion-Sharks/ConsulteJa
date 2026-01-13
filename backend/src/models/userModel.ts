@@ -1,7 +1,7 @@
 import prisma from "@configs/db";
 import type { UUID } from "node:crypto";
-import { ClientOrTransaction } from "@schemas/shared/prisma";
-import { UpsertGoogleUserData } from "@schemas/models/user";
+import { ClientOrTransaction } from "@schemas/shared/prismaSchema";
+import { UpsertGoogleUserData } from "@schemas/models/userModelSchema";
 
 class UserModel {
 

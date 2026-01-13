@@ -1,5 +1,5 @@
-import CjapiModel from "@models/cjapi";
-import { ClientOrTransaction, type DbTransaction } from "@schemas/shared/prisma";
+import CjapiModel from "@models/cjapiModel";
+import { ClientOrTransaction, type DbTransaction } from "@schemas/shared/prismaSchema";
 import { type UUID } from "node:crypto";
 import Errors from '@utils/errorClasses';
 import prisma from "@configs/db";

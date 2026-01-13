@@ -1,4 +1,4 @@
-import UserController from '@controllers/user';
+import UserController from '@controllers/userController';
 import express, { type RequestHandler } from 'express';
 
 const router = express.Router();

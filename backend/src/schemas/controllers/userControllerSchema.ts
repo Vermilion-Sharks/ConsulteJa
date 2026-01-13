@@ -1,4 +1,4 @@
-import { emailSchema, stringSchema } from '@schemas/shared/basics';
+import { emailSchema, stringSchema } from '@schemas/shared/basicsSchema';
 import z from 'zod';
 
 export const createUserSchema = z.strictObject({

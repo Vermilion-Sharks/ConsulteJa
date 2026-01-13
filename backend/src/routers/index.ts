@@ -1,10 +1,10 @@
 import express from 'express';
 
 // * Importing routes
-import userRoutes from './user';
-import authRoutes from './auth';
-import cjapiRoutes from './cjapi';
-import pcjRoutes from './pcj';
+import userRoutes from './userRouter';
+import authRoutes from './authRouter';
+import cjapiRoutes from './cjapiRouter';
+import pcjRoutes from './pcjRouter';
 
 const router = express.Router();
 

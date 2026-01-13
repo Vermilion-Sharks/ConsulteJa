@@ -1,6 +1,6 @@
 import express, { type RequestHandler } from 'express';
 import RateLimit from '@middlewares/rateLimit';
-import AuthController from '@controllers/auth';
+import AuthController from '@controllers/authController';
 import { VSAuth  } from '@middlewares/VSAuth';
 
 const router = express.Router();

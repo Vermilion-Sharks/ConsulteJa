@@ -1,4 +1,4 @@
-import { booleanSchema, stringSchema, urlSchema } from '@schemas/shared/basics';
+import { booleanSchema, stringSchema, urlSchema } from '@schemas/shared/basicsSchema';
 import z from 'zod';
 
 export const productCodeSchema = 

@@ -2,7 +2,7 @@ import jwt from 'jsonwebtoken';
 import type { CookieOptions, Response } from 'express';
 import type { UUID } from 'crypto';
 import crypto from 'crypto';
-import { AccessTokenPayload } from '@schemas/shared/cookies';
+import { AccessTokenPayload } from '@schemas/shared/cookiesSchema';
 import { JWT_SECRET, SESSION_MS_WITH_REMEMBER, SESSION_MS_WITHOUT_REMEMBER } from './constants';
 
 const cookieOptions: CookieOptions = {

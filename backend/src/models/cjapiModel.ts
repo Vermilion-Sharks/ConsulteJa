@@ -1,6 +1,6 @@
 import prisma from "@configs/db";
 import type { UUID } from "node:crypto";
-import { ClientOrTransaction } from "@schemas/shared/prisma";
+import { ClientOrTransaction } from "@schemas/shared/prismaSchema";
 
 class CjapiModel {
 
@@ -28,7 +28,7 @@ class CjapiModel {
         await db.cj_apis.update({
             data: { 
                 ativa: active,
-                ...(active?{data_desativacao: null}:{})
+                ...(active?{data_desativacao: null}:{data_desativacao: new Date()})
             },
             where: { id }
         });

@@ -1,5 +1,5 @@
 import prisma from "@configs/db";
-import { ClientOrTransaction } from "@schemas/shared/prisma";
+import { ClientOrTransaction } from "@schemas/shared/prismaSchema";
 import type { UUID } from "node:crypto";
 
 class SessionModel {

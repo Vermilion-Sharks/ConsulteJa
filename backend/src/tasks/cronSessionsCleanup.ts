@@ -1,7 +1,7 @@
 import cron from 'node-cron';
 import prisma from '@configs/db';
 import LogsUtils from '@utils/logs';
-import type { ErrorCustomVS } from '@schemas/shared/error';
+import type { ErrorCustomVS } from '@schemas/shared/errorSchema';
 
 const sessionsCleanup = cron.schedule('0 * * * *', async () => {
   const start = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });

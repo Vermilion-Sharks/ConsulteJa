@@ -1,5 +1,5 @@
 import type { Request } from 'express';
-import type { AccessTokenPayload, SessionId } from './cookies';
+import type { AccessTokenPayload, SessionId } from './cookiesSchema';
 import { IncomingHttpHeaders } from 'node:http';
 import type { UUID } from 'node:crypto';
 

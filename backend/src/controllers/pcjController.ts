@@ -1,8 +1,8 @@
-import { productMarcaSchema } from "@schemas/controllers/cjapi";
-import { reqQueryPcjDTO } from "@schemas/controllers/pcj";
-import { stringSchema } from "@schemas/shared/basics";
-import { RequestAuthCjApi } from "@schemas/shared/request";
-import PcjService from "@services/pcj";
+import { productMarcaSchema } from "@schemas/controllers/cjapiControllerSchema";
+import { reqQueryPcjDTO } from "@schemas/controllers/pcjControllerSchema";
+import { stringSchema } from "@schemas/shared/basicsSchema";
+import { RequestAuthCjApi } from "@schemas/shared/requestSchema";
+import PcjService from "@services/pcjService";
 import { ResponseVS } from "@utils/response";
 import { Response, NextFunction } from "express";
 
@@ -39,6 +39,17 @@ class PcjController {
             const queryParams = reqQueryPcjDTO.parse(req.query);
             const produtos = await PcjService.getProductsByMarca(cjApiId, marca, queryParams);
             ResponseVS(res, {data: produtos});
+        } catch (err) {
+            next(err);
+        }
+    }
+
+
+
+    static async getProductByCodigo(req: RequestAuthCjApi, res: Response, next: NextFunction){
+        try {
+            const cjApiId = req.cjApiId;
+            const codigo = productMarcaSchema.parse(req.params.codigo);
         } catch (err) {
             next(err);
         }

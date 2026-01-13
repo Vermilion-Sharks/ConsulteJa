@@ -1,10 +1,10 @@
 import type { Response, NextFunction } from "express";
 import Errors from '@utils/errorClasses';
-import CjapiModel from "@models/cjapi";
+import CjapiModel from "@models/cjapiModel";
 import type { UUID } from "node:crypto";
-import { uuidSchema } from "@schemas/shared/basics";
+import { uuidSchema } from "@schemas/shared/basicsSchema";
 import ApiKeyUtils from "@utils/apiKey";
-import { RequestCjApi } from "@schemas/shared/request";
+import { RequestCjApi } from "@schemas/shared/requestSchema";
 
 export async function ApiKeyValidation(req: RequestCjApi, res: Response, next: NextFunction){
     const providedApiKeyHash = req.headers.authorization?.split(' ')[1];

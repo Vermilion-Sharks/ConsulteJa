@@ -1,8 +1,8 @@
-import CjapiModel from "@models/cjapi";
+import CjapiModel from "@models/cjapiModel";
 import type { UUID } from "node:crypto";
 import Errors from '@utils/errorClasses';
-import { ReqQueryPcjDTOOutput } from "@schemas/controllers/pcj";
-import ProdutoModel from "@models/produto";
+import { ReqQueryPcjDTOOutput } from "@schemas/controllers/pcjControllerSchema";
+import ProdutoModel from "@models/produtoModel";
 
 class PcjService {
 

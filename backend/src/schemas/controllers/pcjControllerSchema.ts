@@ -1,4 +1,4 @@
-import { stringSchema } from "@schemas/shared/basics";
+import { stringSchema } from "@schemas/shared/basicsSchema";
 import z from "zod";
 
 const ordemProdutosSchema = z

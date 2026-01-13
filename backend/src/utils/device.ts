@@ -6,16 +6,20 @@ import FormatUtils from './format';
 class DeviceUtils {
 
     static getDeviceName(userAgent: string, ip: string){
-        const { browser, os } = UAParser(userAgent);
+        const { browser, os, device } = UAParser(userAgent);
+
         const browserName = browser.name ?? 'Navegador desconhecido';
-        const osName = os.name ?? 'SO desconhecido';
         const osVersion = os.version ? ` ${os.version}` : '';
+        const osName = os.name ? os.name+osVersion : '';
+        const deviceModel = device.model ?? '';
 
         const geoipInfo = geoip.lookup(ip);
         const acronym = geoipInfo?.country ?? '';
-        const country = FormatUtils.countryAcronymToName(acronym, 'pt') ?? 'País não identificado';
+        const country = FormatUtils.countryAcronymToName(acronym, 'pt') ?? 'Localização desconhecida';
 
-        return `${browserName} no ${osName}${osVersion}, ${country}`;
+        const deviceName = `${browserName} | ${deviceModel||osName||'Dispositivo desconhecido'} | ${country}`
+
+        return deviceName;
     }
 
     static createDeviceHash(visitorId: string){
