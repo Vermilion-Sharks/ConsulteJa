@@ -28,9 +28,9 @@ export interface RequestAuthVS extends Request {
 }
 
 export interface RequestCjApi extends Request {
-    cjApiId?: UUID
+    cjapiId?: UUID
 }
 
 export interface RequestAuthCjApi extends Request {
-    cjApiId: UUID
+    cjapiId: UUID
 }

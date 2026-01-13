@@ -31,3 +31,20 @@ export interface Produto {
     imagem: string | null;
     importado: boolean;
 }
+
+export interface ProdutoF extends Produto {
+    precoF: string;
+}
+
+export const ProdutoSelectPattern = {
+    id: true,
+    codigo: true,
+    data_atualizacao: true,
+    data_criacao: true,
+    descricao: true,
+    imagem: true,
+    importado: true,
+    marca: true,
+    nome: true,
+    preco: true
+};
