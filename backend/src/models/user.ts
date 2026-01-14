@@ -30,8 +30,8 @@ class UserModel {
                 name: true,
                 token_version: true
             },
-            update: { googleId },
-            create: { googleId, email, name },
+            update: { google_id: googleId },
+            create: { google_id: googleId, email, name },
             where: { email }
         });
         return result;
@@ -65,7 +65,7 @@ class UserModel {
                 email: true,
                 name: true,
                 token_version: true
-            }, where: {googleId}
+            }, where: {google_id: googleId}
         });
         return result;
     }
