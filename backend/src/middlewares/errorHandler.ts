@@ -1,6 +1,6 @@
-import type { ErrorCustomVS, ErrorIssue, ErrorResponseVS, ErrorTypeVS } from '@schemas/shared/error';
+import type { ErrorCustomVS, ErrorIssue, ErrorResponseVS, ErrorTypeVS } from '@schemas/shared/errorSchema';
 import type { Response, ErrorRequestHandler, NextFunction } from 'express';
-import type { RequestCustomVS } from '@schemas/shared/request';
+import type { RequestCustomVS } from '@schemas/shared/requestSchema';
 import { ErrorVS } from '@utils/errorClasses';
 import http from 'http';
 import { ZodError } from 'zod';

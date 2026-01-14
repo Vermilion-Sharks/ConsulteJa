@@ -1,6 +1,6 @@
 import Argon2Utils from '@utils/argon2';
 import Errors from '@utils/errorClasses';
-import UserModel from '@models/user';
+import UserModel from '@models/userModel';
 
 class UserService {
 

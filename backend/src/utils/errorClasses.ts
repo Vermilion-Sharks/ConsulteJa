@@ -1,4 +1,4 @@
-import { ErrorTypeVS } from "@schemas/shared/error";
+import { ErrorTypeVS } from "@schemas/shared/errorSchema";
 
 export abstract class ErrorVS extends Error{
   abstract readonly status: number;

@@ -1,6 +1,6 @@
 import prisma from "@configs/db";
-import SessionModel from "@models/session";
-import UserModel from "@models/user";
+import SessionModel from "@models/sessionModel";
+import UserModel from "@models/userModel";
 import { createHash, type UUID } from "node:crypto";
 import Errors from '@utils/errorClasses';
 import Argon2Utils from "@utils/argon2";
@@ -8,7 +8,7 @@ import CookieUtils from "@utils/cookies";
 import DeviceUtils from "@utils/device";
 import { GOOGLE_CLIENT_ID, SESSION_MS_WITH_REMEMBER, SESSION_MS_WITHOUT_REMEMBER } from "@utils/constants";
 import googleClient from "@configs/googleAuth";
-import { CreateSessionDataService, GoogleLoginService, LoginService } from "@schemas/services/auth";
+import { CreateSessionDataService, GoogleLoginService, LoginService } from "@schemas/services/authServiceSchema";
 
 class AuthService {
 
@@ -29,7 +29,7 @@ class AuthService {
         const { id, name, token_version } = user;
         const userId = id as UUID;
 
-        const newSession = await  AuthService.createSessionData({
+        const newSession = await AuthService.createSessionData({
             ...data,
             id: userId, name,
             tokenVersion: token_version

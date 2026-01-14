@@ -1,4 +1,4 @@
-import CjapiController from '@controllers/cjapi';
+import CjapiController from '@controllers/cjapiController';
 import { VSAuth } from '@middlewares/VSAuth';
 import express, {type RequestHandler} from 'express';
 

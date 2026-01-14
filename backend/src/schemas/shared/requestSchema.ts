@@ -1,5 +1,5 @@
 import type { Request } from 'express';
-import type { AccessTokenPayload, SessionId } from './cookies';
+import type { AccessTokenPayload, SessionId } from './cookiesSchema';
 import { IncomingHttpHeaders } from 'node:http';
 import type { UUID } from 'node:crypto';
 
@@ -28,9 +28,9 @@ export interface RequestAuthVS extends Request {
 }
 
 export interface RequestCjApi extends Request {
-    cjApiId?: UUID
+    cjapiId?: UUID
 }
 
 export interface RequestAuthCjApi extends Request {
-    cjApiId: UUID
+    cjapiId: UUID
 }

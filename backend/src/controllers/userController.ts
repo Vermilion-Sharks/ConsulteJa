@@ -1,8 +1,8 @@
-import type { ErrorCustomVS } from '@schemas/shared/error';
-import { RequestCustomVS } from '@schemas/shared/request';
+import type { ErrorCustomVS } from '@schemas/shared/errorSchema';
+import { RequestCustomVS } from '@schemas/shared/requestSchema';
 import type { NextFunction, Response } from 'express';
-import { createUserSchema } from '@schemas/controllers/user';
-import UserService from '@services/user';
+import { createUserSchema } from '@schemas/controllers/userControllerSchema';
+import UserService from '@services/userService';
 import { ResponseVS } from '@utils/response';
 
 class UserController {

@@ -1,8 +1,8 @@
-import { addProductSchema, editProductSchema, findProductsQuerySchema, updateApiStatusSchema } from '@schemas/controllers/cjapi';
-import { uuidSchema } from '@schemas/shared/basics';
-import { ErrorCustomVS } from '@schemas/shared/error';
-import { RequestAuthVS } from '@schemas/shared/request';
-import CjapiService from '@services/cjapi';
+import { addProductSchema, editProductSchema, findProductsQuerySchema, updateApiStatusSchema } from '@schemas/controllers/cjapiControllerSchema';
+import { uuidSchema } from '@schemas/shared/basicsSchema';
+import { ErrorCustomVS } from '@schemas/shared/errorSchema';
+import { RequestAuthVS } from '@schemas/shared/requestSchema';
+import CjapiService from '@services/cjapiService';
 import { ResponseVS } from '@utils/response';
 import type { Response, NextFunction } from 'express';
 import type { UUID } from 'node:crypto';

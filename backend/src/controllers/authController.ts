@@ -1,11 +1,11 @@
-import type { ErrorCustomVS } from '@schemas/shared/error';
-import type { RequestAuthVS, RequestCustomVS } from '@schemas/shared/request';
+import type { ErrorCustomVS } from '@schemas/shared/errorSchema';
+import type { RequestAuthVS, RequestCustomVS } from '@schemas/shared/requestSchema';
 import type { Response, NextFunction } from 'express';
 import type { UUID } from 'node:crypto';
-import { googleLoginSchema, loginSchema } from '@schemas/controllers/auth';
-import AuthService from '@services/auth';
+import { googleLoginSchema, loginSchema } from '@schemas/controllers/authControllerSchema';
+import AuthService from '@services/authService';
 import CookieUtils from '@utils/cookies';
-import SessionModel from '@models/session';
+import SessionModel from '@models/sessionModel';
 import { ResponseVS } from '@utils/response';
 
 class AuthController {

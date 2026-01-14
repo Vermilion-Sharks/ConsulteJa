@@ -2,14 +2,14 @@
 import jwt, { TokenExpiredError } from 'jsonwebtoken';
 import CookieUtils from '@utils/cookies';
 import type { Response, NextFunction } from 'express';
-import type { AccessTokenPayload } from '@schemas/shared/cookies';
-import type { RequestCustomVS } from '@schemas/shared/request';
-import SessionModel from '@models/session';
+import type { AccessTokenPayload } from '@schemas/shared/cookiesSchema';
+import type { RequestCustomVS } from '@schemas/shared/requestSchema';
+import SessionModel from '@models/sessionModel';
 import { type UUID, createHash } from 'node:crypto';
-import UserModel from '@models/user';
+import UserModel from '@models/userModel';
 import DeviceUtils from '@utils/device';
 import Errors from '@utils/errorClasses';
-import AuthService from '@services/auth';
+import AuthService from '@services/authService';
 
 // * Chave secreta para o JWT
 const JWT_SECRET = process.env.JWT_SECRET!;

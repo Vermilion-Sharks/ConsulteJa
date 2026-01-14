@@ -1,4 +1,4 @@
-import { booleanSchema, stringSchema, urlSchema } from '@schemas/shared/basics';
+import { booleanSchema, stringSchema, urlSchema } from '@schemas/shared/basicsSchema';
 import z from 'zod';
 
 export const productCodeSchema = 
@@ -56,5 +56,5 @@ export const editProductSchema = z.strictObject({
     marca: productMarcaSchema.optional(),
     descricao: productDescricaoSchema.optional(),
     preco: productPrecoSchema.optional(),
-    imagem: urlSchema.optional()
+    imagem: urlSchema.nullable().optional()
 })

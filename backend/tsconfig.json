@@ -19,7 +19,7 @@
       "@interfaces/*": ["interfaces/*"],
       "@middlewares/*": ["middlewares/*"],
       "@models/*": ["models/*"],
-      "@routes/*": ["routes/*"],
+      "@routers/*": ["routers/*"],
       "@services/*": ["services/*"],
       "@tasks/*": ["tasks/*"],
       "@utils/*": ["utils/*"],
